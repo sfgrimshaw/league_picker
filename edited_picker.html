@@ -1,0 +1,2567 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="initial-scale=1.0">
+<meta name="flattr:id" content="9ykjj0">
+<link href="/favicon.png" rel="shortcut icon" type="image/png">
+<title>Favorite Pokémon Picker</title>
+<style>
+body {
+    background:#FFF;
+    color:#000;
+    font-family:verdana, sans-serif;
+    font-size:10pt;
+    margin:0;
+    padding:10px;
+}
+
+a:link, a:visited {
+    color:#008;
+    font-weight:bold;
+    text-decoration:none;
+}
+
+a:active, a:hover {
+    color:#ACF;
+}
+
+.info {
+    font-weight:bold;
+}
+
+button {
+    font-family:inherit;
+    cursor:pointer;
+    border:0;
+    border-radius:3px;
+    padding:0.3em 0.5em;
+    background:#CCC;
+    color:#000;
+}
+
+button:hover, button:active, button:focus {
+    background:#DDD;
+    outline:none;
+}
+
+button.disabled {
+    background:#DDD;
+    color:#888;
+    cursor:not-allowed;
+}
+
+button.disabled:hover {
+    background:#DDD;
+}
+
+#container {
+    position:relative;
+    margin-left:-10px;
+    margin-right:-10px;
+    padding:10px;
+    overflow:hidden;
+}
+
+.tabs {
+    margin:20px 0;
+    padding:0 10px;
+    list-style-type:none;
+    border-bottom:1px solid #AAA;
+}
+
+.tabs li {
+    margin:0 -1px -1px 0;
+    padding:0;
+    display:inline-block;
+    vertical-align:bottom;
+    border:1px solid #AAA;
+    background:#EEE;
+}
+
+.tabs li:first-child {
+    border-top-left-radius:5px;
+}
+
+.tabs li:last-child {
+    border-top-right-radius:5px;
+}
+
+.tabs li.active {
+    border-top-left-radius:5px;
+    border-top-right-radius:5px;
+    background:#FFF;
+    border-bottom-color:#FFF;
+}
+
+.tabs a {
+    display:block;
+    padding:5px 10px;
+    font-size:1.1em;
+    color:#000;
+}
+
+.tabs li.active a {
+    font-size:1.2em;
+    padding:10px 20px 5px;
+}
+
+#expand-favorites {
+    display:none;
+}
+
+@media (min-width:360px) {
+    .tabs a {
+        font-size:1.3em;
+    }
+
+    .tabs li.active a {
+        font-size:1.5em;
+    }
+}
+
+@media (min-width:1024px) {
+    /* Put the found favorites beside the picking div when the window is sufficiently large */
+    #picking {
+        float:left;
+        width:636px;
+    }
+
+    #secondary {
+        margin-left:646px;
+    }
+
+    #secondary, #picking {
+        transition:margin-left 0.4s;
+    }
+
+    #picking.collapsed {
+        margin-left:-100%;
+        z-index:-1;
+    }
+
+    #secondary.expanded {
+        margin-left:0;
+    }
+
+    #expand-favorites {
+        display:inline-block;
+    }
+
+    .tabs {
+        padding-left:0;
+    }
+}
+
+@media (min-width:1300px) {
+    /* Once we get to the point where 636px is less than half of the width of the screen, make the picking div just take up half */
+    #picking {
+        width:50%;
+    }
+
+    #secondary {
+        margin-left:51%;
+    }
+}
+
+#pick {
+    background:#58F;
+    color:#FFF;
+    font-size:larger;
+    font-weight:bold;
+    width:6em;
+    border-radius:5px;
+    margin-right:10px;
+}
+
+#pick.disabled {
+    background:#ACF;
+}
+
+#pick:hover {
+    background:#ACF;
+}
+
+.item-list {
+    padding:0;
+    list-style-type:none;
+    line-height:100px;
+}
+
+.item-list li {
+    margin:0;
+    display:inline-block;
+    height:106px;
+    width:106px;
+    border:3px solid transparent;
+    text-align:center;
+    position:relative;
+    vertical-align:top;
+    overflow:visible;
+    border-radius:100%;
+    color:#F7F7F7;
+}
+
+.item-list li span {
+    display:block;
+    width:100px;
+    height:100px;
+    padding:3px;
+    background:#F7F7F7;
+    border-radius:100%;
+}
+
+.item-list li img {
+    position:absolute;
+    top:-5px;
+    left:-3px;
+    /*
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    */
+    z-index:100;
+}
+
+@media (max-width:656px) {
+    .item-list {
+        line-height:75px;
+    }
+
+    .item-list li {
+        height:81px;
+        width:81px;
+    }
+
+    .item-list li span {
+        height:75px;
+        width:75px;
+        padding:3px;
+    }
+
+    .item-list li img {
+        top:-2px;
+        left:-2px;
+        max-height:112%;
+        max-width:112%;
+    }
+}
+
+@media (max-width:456px) {
+    .item-list {
+        line-height:48px;
+    }
+
+    .item-list li {
+        height:54px;
+        width:54px;
+    }
+
+    .item-list li span {
+        height:48px;
+        width:48px;
+        padding:3px;
+    }
+
+    .item-list li img {
+        top:-1px;
+        left:-1px;
+        max-height:112%;
+        max-width:112%;
+    }
+}
+
+#pokemon li {
+    cursor:pointer;
+}
+
+#favorites li {
+    cursor:move;
+    transition:opacity .2s ease-in;
+}
+
+#favorites li.hidden {
+    opacity:0;
+}
+
+#favorites li.no-animate {
+    transition:none;
+}
+
+.item-list li:hover span {
+    background:#CDF;
+}
+
+.item-list.sorting li:hover span {
+    background:#F7F7F7;
+}
+
+#pokemon li.selected span {
+    padding:0;
+    border:3px solid #7AC;
+}
+
+#pokemon, #buttons {
+    text-align:center;
+    margin:auto;
+}
+
+#pokemon li.notice {
+    width:auto;
+    height:auto;
+    max-width:260px;
+    margin:auto;
+    background:#F7F7F7;
+    border-radius:10px;
+    padding:30px 30px;
+    color:#000;
+    text-align:center;
+    line-height:1.4;
+    cursor:auto;
+}
+
+#pokemon li.notice span {
+    display:inline;
+    background:none;
+    width:auto;
+    height:auto;
+    padding:0;
+    border-radius:0;
+}
+
+#buttons {
+    margin-top:30px;
+    position:relative;
+    z-index:3;
+}
+
+#howitworks, #debug {
+    display:none;
+    overflow:hidden;
+}
+
+#debug-toggle {
+    margin-top:3em;
+    font-size:smaller;
+    text-align:right;
+}
+
+#debug {
+    font-size:smaller;
+}
+
+#debug-state {
+    width:80%;
+}
+
+#max-batch-size {
+    width:3em;
+}
+
+.picker-info {
+    text-align:center;
+    font-size:smaller;
+}
+
+#progress-bar {
+    display:block;
+    margin:auto;
+    height:15px;
+    width:150px;
+    margin-top:5px;
+    background:#CDF;
+    vertical-align:middle;
+    transition: transform .2s ease-out;
+}
+
+#progress-bar span {
+    display:block;
+    height:100%;
+    width:0;
+    background:#58F;
+}
+
+.help-text {
+    display:block;
+    font-size:smaller;
+}
+
+#shared-list-modal {
+    position:absolute;
+    background:#FFF;
+    margin:60px auto;
+    top:0;
+    right:0;
+    left:0;
+    width:650px;
+    max-width:95%;
+    box-sizing:border-box;
+    padding:20px 50px 50px;
+    box-shadow:1px 1px 5px #333;
+    z-index:100;
+}
+
+@media(max-width:700px) {
+    #shared-list-modal {
+        padding:20px;
+    }
+}
+
+#shared-list-modal:before {
+    content:'';
+    position:fixed;
+    background:#FFF;
+    opacity:0.5;
+    top:0;
+    right:0;
+    bottom:0;
+    left:0;
+    z-index:-1;
+}
+
+#shared-list-modal .item-list {
+    text-align:center;
+    margin:2em 0;
+}
+
+#shared-list-modal .close {
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:30px;
+    line-height:30px;
+    color:#AAA;
+    font-weight:bold;
+    text-align:center;
+    background:none;
+    padding:0;
+    font-size:larger;
+}
+
+#shared-list-modal .close:hover {
+    background:#EEE;
+}
+
+#shared-list-modal .buttons {
+    text-align:center;
+    line-height:3.5em;
+}
+
+#shared-list-modal button {
+    padding:0.9em 2em;
+    margin:0 0.2em;
+}
+
+#darkmode {
+    position:absolute;
+    top:10px;
+    right:10px;
+}
+</style>
+<link rel="alternate stylesheet" title="dark" type="text/css" href="/styles/favorite-dark.css" disabled>
+<script type="text/javascript">
+/* STYLE SWITCHER */
+
+function setActiveStyleSheet(title) {
+  var i, a, main;
+  for(i=0; (a = document.getElementsByTagName("link")[i]); i++) {
+    if(a.getAttribute("rel").indexOf("style") != -1 && a.getAttribute("title")) {
+      a.disabled = true;
+      if(a.getAttribute("title") == title) a.disabled = false;
+    }
+  }
+  localStorage.setItem("favorite-style", title);
+}
+
+function getActiveStyleSheet() {
+  var i, a;
+  for(i=0; (a = document.getElementsByTagName("link")[i]); i++) {
+    if(a.getAttribute("rel").indexOf("style") != -1 && a.getAttribute("title") && !a.disabled) return a.getAttribute("title");
+  }
+  return null;
+}
+
+function getPreferredStyleSheet() {
+  var i, a;
+  for(i=0; (a = document.getElementsByTagName("link")[i]); i++) {
+    if(a.getAttribute("rel").indexOf("style") != -1
+       && a.getAttribute("rel").indexOf("alt") == -1
+       && a.getAttribute("title")
+       ) return a.getAttribute("title");
+  }
+  return null;
+}
+
+var style = localStorage.getItem("favorite-style");
+var title = style;
+setActiveStyleSheet(title);
+</script>
+</head>
+<body>
+<a href="#" id="darkmode">Dark mode</a>
+<h1>Favorite Pokémon Picker</h1>
+
+<p>For each group of Pokémon presented to you, click one or more of your favorites from that group and press the "Pick" button. Eventually, your favorite Pokémon will start appearing under "Found Favorites". You can continue as long as you like to construct an arbitrarily long list of your favorite Pokémon.</p>
+
+<p>In principle, this picker is perfectly accurate, provided you pick consistently - you'll correctly get your second favorite second, even if it's pitted against your absolute favorite early on, for instance. <a href="#howitworks" class="toggle">Click here for more on how this tool works.</a> You can reorder your favorites after you've found them, but in principle you shouldn't need to.</p>
+
+<p>Various filtering and presentation options for the picker can be found in the "Options" tab next to "Found Favorites" below.</p>
+
+<p>Want to create your own favorite picker? <a href="https://github.com/antialiasis/favorite-picker">It's on GitHub with instructions to get you started.</a></p>
+
+<p class="help-text">Temporary S/V Pokémon images extracted from <a href="https://twitter.com/Sibuna_Switch/status/1594156122512195584">screenshots shared by Anubis</a>.</p>
+
+<div id="howitworks">
+<h2>How It Works</h2>
+
+<p>The idea for the favorite Pokémon picker is not original to me; it is inspired by an old, now-defunct original that has been recreated with upgrades <a href="http://fio4ri.github.io/FavoritePokemon/">here</a>. Basically, it would present you with a random pair of Pokémon, you'd pick the one you liked better, and that would eliminate the other Pokémon from the running and then give you another pair randomly chosen from the remaining Pokémon. Eventually, when you had eliminated every Pokémon but one, the remaining one had to be your very favorite Pokémon, and the last few you eliminated were given second to tenth place.</p>
+
+<p>This picker was designed to improve on this concept. The main differences are that it will present you with up to 20 Pokémon at a time by default, which speeds up the picking process considerably, and that rather than giving second to tenth place to the last nine Pokémon you eliminated (which leaves them partially up to chance - if the old picker happens to make you pick between your two favorites early on, your real second favorite won't even make the list), it will instead bring back all Pokémon eliminated by your favorite and have you pick between them in the same way as before. This recursiveness also means that instead of cutting it off at top ten, you can in theory continue picking until you've ordered literally every single Pokémon into a favorites list.</p>
+
+<p>The basic principle driving this picker is still elimination - it just also keeps track of which Pokémon you picked over each eliminated Pokémon. For example, if the picker shows Charizard and Butterfree, and you pick Charizard, it doesn't give Charizard points or mark it as liked somehow; it just marks Butterfree as eliminated by Charizard. If you eventually go on to eliminate every Pokémon except Charizard, then Charizard will be added to your Found Favorites, and Butterfree (and any other Pokémon that were eliminated by Charizard) will be back in the running for second place. Similarly, if you had previously had a batch with Charizard, Butterfree and Blastoise in it, and you picked Charizard and Butterfree, then Blastoise will reappear whenever Charizard and Butterfree have <em>both</em> been added under Found Favorites.</p>
+
+<p>All that picking means is therefore, "I like all of <em>these</em> Pokémon better than any of <em>those</em>." This is intentionally a broad, flexible statement; you'll end up with the same result regardless of how many Pokémon you choose to pick from each batch, so it's up to you how many you want to pick at a time. If you just want to get your number one favorite or a select few, it's quickest to try to pick just one Pokémon from each batch, while if you want to construct something like a top fifty list, you may want to start by picking every Pokémon that's likely to end up in that top fifty.</p>
+
+<p>The elimination mechanic is also why you can't pick nothing; Pokémon can only ever be eliminated <em>by some other Pokémon</em>, so that the picker can know when to bring them back. The "Pass" button is instead equivalent to picking <em>every</em> Pokémon in the batch, which eliminates nothing and simply means all those Pokémon get shuffled into the next round - passing over and over won't get you anywhere, so make sure you do some actual picking.</p>
+
+<p><a href="#howitworks" class="toggle">Hide explanation</a></p>
+</div>
+
+<div id="container">
+
+<div id="picking">
+<ul id="pokemon" class="item-list">
+</ul>
+
+<p id="buttons"><button id="pick">Pick</button> <button id="pass">Pass</button> <button id="undo">Undo</button> <button id="redo">Redo</button></p>
+
+<div class="picker-info">
+<p>Pokémon remaining to be eliminated before next favorite is found: <span id="remaining"></span></p>
+
+<p>Progress towards next favorite: <span id="progress-bar"><span></span></span></p>
+</div>
+</div>
+
+<div id="secondary">
+<ul class="tabs">
+<li id="expand-favorites"><a href="#" title="Expand list">&lsaquo;</a></li><li><a href="#found-favorites">Found Favorites</a></li><li><a href="#options">Options</a></li>
+</ul>
+
+<div id="found-favorites">
+<ol id="favorites" class="item-list">
+</ol>
+
+<p id="dispute">Not seeing one of your favorite Pokémon? <a href="#">Click here to check what happened to it.</a></p>
+
+<p id="debug-toggle"><a href="#debug" class="toggle">Import/export state</a></p>
+
+<div id="debug">
+<p>To export your picker state (in order to, for example, import it on another computer, or allow me to replicate an issue you're experiencing), copy the entire contents of the text box below and save them however you see fit - in a text file on your computer, in an e-mail to yourself, etc.</p>
+
+<p>To import a state, erase the entire contents of the text box and replace them with an exported state, then press the "Import state" button below.</p>
+
+<textarea id="debug-state" rows="5" cols="10"></textarea>
+<p><button id="import">Import state</button></p>
+</div>
+</div>
+
+<div id="options">
+<p><label><input type="checkbox" id="shiny"> Shiny mode</label>
+<span class="help-text">If checked, all displayed sprites will be shiny.</span></p>
+
+<p><label>Maximum batch size: <input type="number" id="max-batch-size" value="20" min="2" max="20" step="1"></label>
+<span class="help-text">The maximum number of Pokémon shown at a time. When there are few Pokémon left in a round, you'll see fewer than this. Reducing the maximum batch size may make it easier to pick, but it will also take longer to get through each round.</span></p>
+
+<p>Include forms:
+<label>(<input type="checkbox" id="forms-all" class="select-all" value="includeForms"> Select all)</label>
+<label><input type="checkbox" class="include-forms" value="regional"> regional variants</label>,
+<label><input type="checkbox" class="include-forms" value="alternate"> other alternate forms</label>,
+<label><input type="checkbox" class="include-forms" value="mega"> Mega Evolutions</label>,
+<label><input type="checkbox" class="include-forms" value="gigantamax"> Gigantamax forms</label>,
+<label><input type="checkbox" class="include-forms" value="battle"> other battle transformations</label>,
+<label><input type="checkbox" class="include-forms" value="aesthetic"> aesthetic variants</label>,
+<label><input type="checkbox" class="include-forms" value="gender"> gender differences</label>
+<span class="help-text">In forms mode, Pokémon forms are included as separate entities, split into the above categories.</span></p>
+
+<p id="major-only"><label><input type="checkbox" id="major"> Major forms only</label>
+<span class="help-text">If checked, only forms marked as "major" (aesthetically significant, as judged somewhat arbitrarily by me) will be included - for instance, no barely-visible gender differences or partial color variations.</span></p>
+
+<p><label><input type="checkbox" id="final"> Final evolutions only</label>
+<span class="help-text">If checked, only final evolutions will be included.</span></p>
+
+<p>Generations to include:
+<label>(<input type="checkbox" id="generations-all" class="select-all" value="generations"> Select all)</label>
+<label><input type="checkbox" class="generations setting-number" value="1" checked> I</label>,
+<label><input type="checkbox" class="generations setting-number" value="2" checked> II</label>,
+<label><input type="checkbox" class="generations setting-number" value="3" checked> III</label>,
+<label><input type="checkbox" class="generations setting-number" value="4" checked> IV</label>,
+<label><input type="checkbox" class="generations setting-number" value="5" checked> V</label>,
+<label><input type="checkbox" class="generations setting-number" value="6" checked> VI</label>,
+<label><input type="checkbox" class="generations setting-number" value="7" checked> VII</label>,
+<label><input type="checkbox" class="generations setting-number" value="8" checked> VIII</label>,
+<label><input type="checkbox" class="generations setting-number" value="8.5" checked> Legends: Arceus</label>,
+<label><input type="checkbox" class="generations setting-number" value="9" checked> IX</label>
+<span class="help-text">Only Pokémon from the checked generations will appear. In forms mode, forms count as the generation where they were introduced, but gender differences as the base Pokémon's generation.</span></p>
+
+<p>Types to include:
+<label>(<input type="checkbox" id="types-all" class="select-all" value="types"> Select all)</label>
+<label><input type="checkbox" class="types" value="normal" checked> Normal</label>,
+<label><input type="checkbox" class="types" value="fire" checked> Fire</label>,
+<label><input type="checkbox" class="types" value="water" checked> Water</label>,
+<label><input type="checkbox" class="types" value="electric" checked> Electric</label>,
+<label><input type="checkbox" class="types" value="grass" checked> Grass</label>,
+<label><input type="checkbox" class="types" value="ice" checked> Ice</label>,
+<label><input type="checkbox" class="types" value="fighting" checked> Fighting</label>,
+<label><input type="checkbox" class="types" value="poison" checked> Poison</label>,
+<label><input type="checkbox" class="types" value="ground" checked> Ground</label>,
+<label><input type="checkbox" class="types" value="flying" checked> Flying</label>,
+<label><input type="checkbox" class="types" value="psychic" checked> Psychic</label>,
+<label><input type="checkbox" class="types" value="bug" checked> Bug</label>,
+<label><input type="checkbox" class="types" value="rock" checked> Rock</label>,
+<label><input type="checkbox" class="types" value="ghost" checked> Ghost</label>,
+<label><input type="checkbox" class="types" value="dragon" checked> Dragon</label>,
+<label><input type="checkbox" class="types" value="dark" checked> Dark</label>,
+<label><input type="checkbox" class="types" value="steel" checked> Steel</label>,
+<label><input type="checkbox" class="types" value="fairy" checked> Fairy</label>
+<span class="help-text">Only Pokémon that have at least one of the selected types will appear.</span></p>
+
+<p><label><input type="checkbox" id="spoilers"> Include spoilers</label>
+<span class="help-text">If unchecked, Pokémon that might be considered spoilers, either for story reasons or because they're officially unreleased, will be excluded.</span></p>
+
+<p><button class="reset">Reset</button></p>
+</div>
+</div>
+</div>
+
+<p><a href="pokesite.aspx">Back to The Cave of Dragonflies</a></p>
+
+<div id="shared-list-modal" style="display:none">
+<button class="close shared-list-skip">&times;</button>
+<h2>Shared list</h2>
+
+<p>Generated by this picker tool. Create your own list or continue from this one below!</p>
+
+<ol id="shared-list" class="item-list">
+</ol>
+
+<p class="buttons"><button id="shared-list-continue">Continue from this list</button> <button class="shared-list-skip">Make my own list</button></p>
+</div>
+<script src="picker/jquery-1.10.2.min.js"></script>
+<script src="picker/picker.js?v=1"></script>
+<script src="picker/picker-ui.js"></script>
+<script src="picker/Sortable.min.js"></script>
+<script>
+'use strict';
+
+/* POKÉMON DATA CONSTANTS */
+var items = [
+    {id: '001', name: 'Bulbasaur', image: '001.png'},
+    {id: '002', name: 'Ivysaur', image: '002.png'},
+    {id: '003', name: 'Venusaur', image: '003.png'},
+    {id: '003M', name: 'Mega Venusaur', image: '003M.png'},
+    {id: '003G', name: 'Gmax Venusaur', image: '003G.png'},
+    {id: '004', name: 'Charmander', image: '004.png'},
+    {id: '005', name: 'Charmeleon', image: '005.png'},
+    {id: '006', name: 'Charizard', image: '006.png'},
+    {id: '006MX', name: 'Mega Charizard X', image: '006MX.png'},
+    {id: '006MY', name: 'Mega Charizard Y', image: '006MY.png'},
+    {id: '006G', name: 'Gmax Charizard', image: '006G.png'},
+    {id: '007', name: 'Squirtle', image: '007.png'},
+    {id: '008', name: 'Wartortle', image: '008.png'},
+    {id: '009', name: 'Blastoise', image: '009.png'},
+    {id: '009M', name: 'Mega Blastoise', image: '009M.png'},
+    {id: '009G', name: 'Gmax Blastoise', image: '009G.png'},
+    {id: '010', name: 'Caterpie', image: '010.png'},
+    {id: '011', name: 'Metapod', image: '011.png'},
+    {id: '012', name: 'Butterfree', image: '012.png'},
+    {id: '012G', name: 'Gmax Butterfree', image: '012G.png'},
+    {id: '013', name: 'Weedle', image: '013.png'},
+    {id: '014', name: 'Kakuna', image: '014.png'},
+    {id: '015', name: 'Beedrill', image: '015.png'},
+    {id: '015M', name: 'Mega Beedrill', image: '015M.png'},
+    {id: '016', name: 'Pidgey', image: '016.png'},
+    {id: '017', name: 'Pidgeotto', image: '017.png'},
+    {id: '018', name: 'Pidgeot', image: '018.png'},
+    {id: '018M', name: 'Mega Pidgeot', image: '018M.png'},
+    {id: '019', name: 'Rattata', image: '019.png'},
+    {id: '019A', name: 'Alolan Rattata', image: '019A.png'},
+    {id: '020', name: 'Raticate', image: '020.png'},
+    {id: '020A', name: 'Alolan Raticate', image: '020A.png'},
+    {id: '021', name: 'Spearow', image: '021.png'},
+    {id: '022', name: 'Fearow', image: '022.png'},
+    {id: '023', name: 'Ekans', image: '023.png'},
+    {id: '024', name: 'Arbok', image: '024.png'},
+    {id: '025', name: 'Pikachu', image: '025.png'},
+    {id: '025G', name: 'Gmax Pikachu', image: '025G.png'},
+    {id: '025F_ROCK', name: 'Pikachu Rock Star', image: '025F_ROCK.png'},
+    {id: '025F_POP', name: 'Pikachu Pop Star', image: '025F_POP.png'},
+    {id: '025F_PHD', name: 'Pikachu PhD', image: '025F_PHD.png'},
+    {id: '025F_LIBRE', name: 'Pikachu Libre', image: '025F_LIBRE.png'},
+    {id: '025F_BELLE', name: 'Pikachu Belle', image: '025F_BELLE.png'},
+    {id: '026', name: 'Raichu', image: '026.png'},
+    {id: '026A', name: 'Alolan Raichu', image: '026A.png'},
+    {id: '027', name: 'Sandshrew', image: '027.png'},
+    {id: '027A', name: 'Alolan Sandshrew', image: '027A.png'},
+    {id: '028', name: 'Sandslash', image: '028.png'},
+    {id: '028A', name: 'Alolan Sandslash', image: '028A.png'},
+    {id: '029', name: 'Nidoran♀', image: '029.png'},
+    {id: '030', name: 'Nidorina', image: '030.png'},
+    {id: '031', name: 'Nidoqueen', image: '031.png'},
+    {id: '032', name: 'Nidoran♂', image: '032.png'},
+    {id: '033', name: 'Nidorino', image: '033.png'},
+    {id: '034', name: 'Nidoking', image: '034.png'},
+    {id: '035', name: 'Clefairy', image: '035.png'},
+    {id: '036', name: 'Clefable', image: '036.png'},
+    {id: '037', name: 'Vulpix', image: '037.png'},
+    {id: '037A', name: 'Alolan Vulpix', image: '037A.png'},
+    {id: '038', name: 'Ninetales', image: '038.png'},
+    {id: '038A', name: 'Alolan Ninetales', image: '038A.png'},
+    {id: '039', name: 'Jigglypuff', image: '039.png'},
+    {id: '040', name: 'Wigglytuff', image: '040.png'},
+    {id: '041', name: 'Zubat', image: '041.png'},
+    {id: '042', name: 'Golbat', image: '042.png'},
+    {id: '043', name: 'Oddish', image: '043.png'},
+    {id: '044', name: 'Gloom', image: '044.png'},
+    {id: '045', name: 'Vileplume', image: '045.png'},
+    {id: '046', name: 'Paras', image: '046.png'},
+    {id: '047', name: 'Parasect', image: '047.png'},
+    {id: '048', name: 'Venonat', image: '048.png'},
+    {id: '049', name: 'Venomoth', image: '049.png'},
+    {id: '050', name: 'Diglett', image: '050.png'},
+    {id: '050A', name: 'Alolan Diglett', image: '050A.png'},
+    {id: '051', name: 'Dugtrio', image: '051.png'},
+    {id: '051A', name: 'Alolan Dugtrio', image: '051A.png'},
+    {id: '052', name: 'Meowth', image: '052.png'},
+    {id: '052A', name: 'Alolan Meowth', image: '052A.png'},
+    {id: '052G', name: 'Gmax Meowth', image: '052G.png'},
+    {id: '052L', name: 'Galarian Meowth', image: '052L.png'},
+    {id: '053', name: 'Persian', image: '053.png'},
+    {id: '053A', name: 'Alolan Persian', image: '053A.png'},
+    {id: '054', name: 'Psyduck', image: '054.png'},
+    {id: '055', name: 'Golduck', image: '055.png'},
+    {id: '056', name: 'Mankey', image: '056.png'},
+    {id: '057', name: 'Primeape', image: '057.png'},
+    {id: '058', name: 'Growlithe', image: '058.png'},
+    {id: '058H', name: 'Hisuian Growlithe', image: '058H.png'},
+    {id: '059', name: 'Arcanine', image: '059.png'},
+    {id: '059H', name: 'Hisuian Arcanine', image: '059H.png'},
+    {id: '060', name: 'Poliwag', image: '060.png'},
+    {id: '061', name: 'Poliwhirl', image: '061.png'},
+    {id: '062', name: 'Poliwrath', image: '062.png'},
+    {id: '063', name: 'Abra', image: '063.png'},
+    {id: '064', name: 'Kadabra', image: '064.png'},
+    {id: '065', name: 'Alakazam', image: '065.png'},
+    {id: '065M', name: 'Mega Alakazam', image: '065M.png'},
+    {id: '066', name: 'Machop', image: '066.png'},
+    {id: '067', name: 'Machoke', image: '067.png'},
+    {id: '068', name: 'Machamp', image: '068.png'},
+    {id: '068G', name: 'Gmax Machamp', image: '068G.png'},
+    {id: '069', name: 'Bellsprout', image: '069.png'},
+    {id: '070', name: 'Weepinbell', image: '070.png'},
+    {id: '071', name: 'Victreebel', image: '071.png'},
+    {id: '072', name: 'Tentacool', image: '072.png'},
+    {id: '073', name: 'Tentacruel', image: '073.png'},
+    {id: '074', name: 'Geodude', image: '074.png'},
+    {id: '074A', name: 'Alolan Geodude', image: '074A.png'},
+    {id: '075', name: 'Graveler', image: '075.png'},
+    {id: '075A', name: 'Alolan Graveler', image: '075A.png'},
+    {id: '076', name: 'Golem', image: '076.png'},
+    {id: '076A', name: 'Alolan Golem', image: '076A.png'},
+    {id: '077', name: 'Ponyta', image: '077.png'},
+    {id: '077L', name: 'Galarian Ponyta', image: '077L.png'},
+    {id: '078', name: 'Rapidash', image: '078.png'},
+    {id: '078L', name: 'Galarian Rapidash', image: '078L.png'},
+    {id: '079', name: 'Slowpoke', image: '079.png'},
+    {id: '079L', name: 'Galarian Slowpoke', image: '079L.png'},
+    {id: '080', name: 'Slowbro', image: '080.png'},
+    {id: '080M', name: 'Mega Slowbro', image: '080M.png'},
+    {id: '080L', name: 'Galarian Slowbro', image: '080L.png'},
+    {id: '081', name: 'Magnemite', image: '081.png'},
+    {id: '082', name: 'Magneton', image: '082.png'},
+    {id: '083', name: 'Farfetch\'d', image: '083.png'},
+    {id: '083L', name: 'Galarian Farfetch\'d', image: '083L.png'},
+    {id: '084', name: 'Doduo', image: '084.png'},
+    {id: '085', name: 'Dodrio', image: '085.png'},
+    {id: '086', name: 'Seel', image: '086.png'},
+    {id: '087', name: 'Dewgong', image: '087.png'},
+    {id: '088', name: 'Grimer', image: '088.png'},
+    {id: '088A', name: 'Alolan Grimer', image: '088A.png'},
+    {id: '089', name: 'Muk', image: '089.png'},
+    {id: '089A', name: 'Alolan Muk', image: '089A.png'},
+    {id: '090', name: 'Shellder', image: '090.png'},
+    {id: '091', name: 'Cloyster', image: '091.png'},
+    {id: '092', name: 'Gastly', image: '092.png'},
+    {id: '093', name: 'Haunter', image: '093.png'},
+    {id: '094', name: 'Gengar', image: '094.png'},
+    {id: '094M', name: 'Mega Gengar', image: '094M.png'},
+    {id: '094G', name: 'Gmax Gengar', image: '094G.png'},
+    {id: '095', name: 'Onix', image: '095.png'},
+    {id: '096', name: 'Drowzee', image: '096.png'},
+    {id: '097', name: 'Hypno', image: '097.png'},
+    {id: '098', name: 'Krabby', image: '098.png'},
+    {id: '099', name: 'Kingler', image: '099.png'},
+    {id: '099G', name: 'Gmax Kingler', image: '099G.png'},
+    {id: '100', name: 'Voltorb', image: '100.png'},
+    {id: '100H', name: 'Hisuian Voltorb', image: '100H.png'},
+    {id: '101', name: 'Electrode', image: '101.png'},
+    {id: '101H', name: 'Hisuian Electrode', image: '101H.png'},
+    {id: '102', name: 'Exeggcute', image: '102.png'},
+    {id: '103', name: 'Exeggutor', image: '103.png'},
+    {id: '103A', name: 'Alolan Exeggutor', image: '103A.png'},
+    {id: '104', name: 'Cubone', image: '104.png'},
+    {id: '105', name: 'Marowak', image: '105.png'},
+    {id: '105A', name: 'Alolan Marowak', image: '105A.png'},
+    {id: '106', name: 'Hitmonlee', image: '106.png'},
+    {id: '107', name: 'Hitmonchan', image: '107.png'},
+    {id: '108', name: 'Lickitung', image: '108.png'},
+    {id: '109', name: 'Koffing', image: '109.png'},
+    {id: '110', name: 'Weezing', image: '110.png'},
+    {id: '110L', name: 'Galarian Weezing', image: '110L.png'},
+    {id: '111', name: 'Rhyhorn', image: '111.png'},
+    {id: '112', name: 'Rhydon', image: '112.png'},
+    {id: '113', name: 'Chansey', image: '113.png'},
+    {id: '114', name: 'Tangela', image: '114.png'},
+    {id: '115', name: 'Kangaskhan', image: '115.png'},
+    {id: '115M', name: 'Mega Kangaskhan', image: '115M.png'},
+    {id: '116', name: 'Horsea', image: '116.png'},
+    {id: '117', name: 'Seadra', image: '117.png'},
+    {id: '118', name: 'Goldeen', image: '118.png'},
+    {id: '119', name: 'Seaking', image: '119.png'},
+    {id: '120', name: 'Staryu', image: '120.png'},
+    {id: '121', name: 'Starmie', image: '121.png'},
+    {id: '122', name: 'Mr Mime', image: '122.png'},
+    {id: '122L', name: 'Galarian Mr Mime', image: '122L.png'},
+    {id: '123', name: 'Scyther', image: '123.png'},
+    {id: '124', name: 'Jynx', image: '124.png'},
+    {id: '125', name: 'Electabuzz', image: '125.png'},
+    {id: '126', name: 'Magmar', image: '126.png'},
+    {id: '127', name: 'Pinsir', image: '127.png'},
+    {id: '127M', name: 'Mega Pinsir', image: '127M.png'},
+    {id: '128', name: 'Tauros', image: '128.png'},
+    {id: '128P_C', name: 'Paldean Tauros Combat Breed', image: '128P_C.png'},
+    {id: '128P_B', name: 'Paldean Tauros Blaze Breed', image: '128P_B.png'},
+    {id: '128P_A', name: 'Paldean Tauros Aqua Breed', image: '128P_A.png'},
+    {id: '129', name: 'Magikarp', image: '129.png'},
+    {id: '130', name: 'Gyarados', image: '130.png'},
+    {id: '130M', name: 'Mega Gyarados', image: '130M.png'},
+    {id: '131', name: 'Lapras', image: '131.png'},
+    {id: '131G', name: 'Gmax Lapras', image: '131G.png'},
+    {id: '132', name: 'Ditto', image: '132.png'},
+    {id: '133', name: 'Eevee', image: '133.png'},
+    {id: '133G', name: 'Gmax Eevee', image: '133G.png'},
+    {id: '134', name: 'Vaporeon', image: '134.png'},
+    {id: '135', name: 'Jolteon', image: '135.png'},
+    {id: '136', name: 'Flareon', image: '136.png'},
+    {id: '137', name: 'Porygon', image: '137.png'},
+    {id: '138', name: 'Omanyte', image: '138.png'},
+    {id: '139', name: 'Omastar', image: '139.png'},
+    {id: '140', name: 'Kabuto', image: '140.png'},
+    {id: '141', name: 'Kabutops', image: '141.png'},
+    {id: '142', name: 'Aerodactyl', image: '142.png'},
+    {id: '142M', name: 'Mega Aerodactyl', image: '142M.png'},
+    {id: '143', name: 'Snorlax', image: '143.png'},
+    {id: '142G', name: 'Gmax Snorlax', image: '142G.png'},
+    {id: '144', name: 'Articuno', image: '144.png'},
+    {id: '144L', name: 'Galarian Articuno', image: '144L.png'},
+    {id: '145', name: 'Zapdos', image: '145.png'},
+    {id: '145L', name: 'Galarian Zapdos', image: '145L.png'},
+    {id: '146', name: 'Moltres', image: '146.png'},
+    {id: '146L', name: 'Galarian Moltres', image: '146L.png'},
+    {id: '147', name: 'Dratini', image: '147.png'},
+    {id: '148', name: 'Dragonair', image: '148.png'},
+    {id: '149', name: 'Dragonite', image: '149.png'},
+    {id: '150', name: 'Mewtwo', image: '150.png'},
+    {id: '150MX', name: 'Mega Mewtwo X', image: '150MX.png'},
+    {id: '150MY', name: 'Mega Mewtwo Y', image: '150MY.png'},
+    {id: '151', name: 'Mew', image: '151.png'},
+    {id: '152', name: 'Chikorita', image: '152.png'},
+    {id: '153', name: 'Bayleef', image: '153.png'},
+    {id: '154', name: 'Meganium', image: '154.png'},
+    {id: '155', name: 'Cyndaquil', image: '155.png'},
+    {id: '156', name: 'Quilava', image: '156.png'},
+    {id: '157', name: 'Typhlosion', image: '157.png'},
+    {id: '157H', name: 'Hisuian Typhlosion', image: '157H.png'},
+    {id: '158', name: 'Totodile', image: '158.png'},
+    {id: '159', name: 'Croconaw', image: '159.png'},
+    {id: '160', name: 'Feraligatr', image: '160.png'},
+    {id: '161', name: 'Sentret', image: '161.png'},
+    {id: '162', name: 'Furret', image: '162.png'},
+    {id: '163', name: 'Hoothoot', image: '163.png'},
+    {id: '164', name: 'Noctowl', image: '164.png'},
+    {id: '165', name: 'Ledyba', image: '165.png'},
+    {id: '166', name: 'Ledian', image: '166.png'},
+    {id: '167', name: 'Spinarak', image: '167.png'},
+    {id: '168', name: 'Ariados', image: '168.png'},
+    {id: '169', name: 'Crobat', image: '169.png'},
+    {id: '170', name: 'Chinchou', image: '170.png'},
+    {id: '171', name: 'Lanturn', image: '171.png'},
+    {id: '172', name: 'Pichu', image: '172.png'},
+    {id: '173', name: 'Cleffa', image: '173.png'},
+    {id: '174', name: 'Igglybuff', image: '174.png'},
+    {id: '175', name: 'Togepi', image: '175.png'},
+    {id: '176', name: 'Togetic', image: '176.png'},
+    {id: '177', name: 'Natu', image: '177.png'},
+    {id: '178', name: 'Xatu', image: '178.png'},
+    {id: '179', name: 'Mareep', image: '179.png'},
+    {id: '180', name: 'Flaaffy', image: '180.png'},
+    {id: '181', name: 'Ampharos', image: '181.png'},
+    {id: '181M', name: 'Mega Ampharos', image: '181M.png'},
+    {id: '182', name: 'Bellossom', image: '182.png'},
+    {id: '183', name: 'Marill', image: '183.png'},
+    {id: '184', name: 'Azumarill', image: '184.png'},
+    {id: '185', name: 'Sudowoodo', image: '185.png'},
+    {id: '186', name: 'Politoed', image: '186.png'},
+    {id: '187', name: 'Hoppip', image: '187.png'},
+    {id: '188', name: 'Skiploom', image: '188.png'},
+    {id: '189', name: 'Jumpluff', image: '189.png'},
+    {id: '190', name: 'Aipom', image: '190.png'},
+    {id: '191', name: 'Sunkern', image: '191.png'},
+    {id: '192', name: 'Sunflora', image: '192.png'},
+    {id: '193', name: 'Yanma', image: '193.png'},
+    {id: '194', name: 'Wooper', image: '194.png'},
+    {id: '194P', name: 'Paldean Wooper', image: '194P.png'},
+    {id: '195', name: 'Quagsire', image: '195.png'},
+    {id: '196', name: 'Espeon', image: '196.png'},
+    {id: '197', name: 'Umbreon', image: '197.png'},
+    {id: '198', name: 'Murkrow', image: '198.png'},
+    {id: '199', name: 'Slowking', image: '199.png'},
+    {id: '199L', name: 'Galarian Slowking', image: '199L.png'},
+    {id: '200', name: 'Misdreavus', image: '200.png'},
+    {id: '201', name: 'Unown', image: '201.png'},
+    {id: '202', name: 'Wobbuffet', image: '202.png'},
+    {id: '203', name: 'Girafarig', image: '203.png'},
+    {id: '204', name: 'Pineco', image: '204.png'},
+    {id: '205', name: 'Forretress', image: '205.png'},
+    {id: '206', name: 'Dunsparce', image: '206.png'},
+    {id: '207', name: 'Gligar', image: '207.png'},
+    {id: '208', name: 'Steelix', image: '208.png'},
+    {id: '208M', name: 'Mega Steelix', image: '208M.png'},
+    {id: '209', name: 'Snubbull', image: '209.png'},
+    {id: '210', name: 'Granbull', image: '210.png'},
+    {id: '211', name: 'Qwilfish', image: '211.png'},
+    {id: '211H', name: 'Hisuian Qwilfish', image: '211H.png'},
+    {id: '212', name: 'Scizor', image: '212.png'},
+    {id: '212M', name: 'Mega Scizor', image: '212M.png'},
+    {id: '213', name: 'Shuckle', image: '213.png'},
+    {id: '214', name: 'Heracross', image: '214.png'},
+    {id: '214M', name: 'Mega Heracross', image: '214M.png'},
+    {id: '215', name: 'Sneasel', image: '215.png'},
+    {id: '215H', name: 'Hisuian Sneasel', image: '215H.png'},
+    {id: '216', name: 'Teddiursa', image: '216.png'},
+    {id: '217', name: 'Ursaring', image: '217.png'},
+    {id: '218', name: 'Slugma', image: '218.png'},
+    {id: '219', name: 'Magcargo', image: '219.png'},
+    {id: '220', name: 'Swinub', image: '220.png'},
+    {id: '221', name: 'Piloswine', image: '221.png'},
+    {id: '222', name: 'Corsola', image: '222.png'},
+    {id: '222L', name: 'Galarian Corsola', image: '222L.png'},
+    {id: '223', name: 'Remoraid', image: '223.png'},
+    {id: '224', name: 'Octillery', image: '224.png'},
+    {id: '225', name: 'Delibird', image: '225.png'},
+    {id: '226', name: 'Mantine', image: '226.png'},
+    {id: '227', name: 'Skarmory', image: '227.png'},
+    {id: '228', name: 'Houndour', image: '228.png'},
+    {id: '229', name: 'Houndoom', image: '229.png'},
+    {id: '229M', name: 'Mega Houndoom', image: '229M.png'},
+    {id: '230', name: 'Kingdra', image: '230.png'},
+    {id: '231', name: 'Phanpy', image: '231.png'},
+    {id: '232', name: 'Donphan', image: '232.png'},
+    {id: '233', name: 'Porygon2', image: '233.png'},
+    {id: '234', name: 'Stantler', image: '234.png'},
+    {id: '235', name: 'Smeargle', image: '235.png'},
+    {id: '236', name: 'Tyrogue', image: '236.png'},
+    {id: '237', name: 'Hitmontop', image: '237.png'},
+    {id: '238', name: 'Smoochum', image: '238.png'},
+    {id: '239', name: 'Elekid', image: '239.png'},
+    {id: '240', name: 'Magby', image: '240.png'},
+    {id: '241', name: 'Miltank', image: '241.png'},
+    {id: '242', name: 'Blissey', image: '242.png'},
+    {id: '243', name: 'Raikou', image: '243.png'},
+    {id: '244', name: 'Entei', image: '244.png'},
+    {id: '245', name: 'Suicune', image: '245.png'},
+    {id: '246', name: 'Larvitar', image: '246.png'},
+    {id: '247', name: 'Pupitar', image: '247.png'},
+    {id: '248', name: 'Tyranitar', image: '248.png'},
+    {id: '248M', name: 'Mega Tyranitar', image: '248M.png'},
+    {id: '249', name: 'Lugia', image: '249.png'},
+    {id: '250', name: 'Ho-Oh', image: '250.png'},
+    {id: '251', name: 'Celebi', image: '251.png'},
+    {id: '252', name: 'Treecko', image: '252.png'},
+    {id: '253', name: 'Grovyle', image: '253.png'},
+    {id: '254', name: 'Sceptile', image: '254.png'},
+    {id: '254M', name: 'Mega Sceptile', image: '254M.png'},
+    {id: '255', name: 'Torchic', image: '255.png'},
+    {id: '256', name: 'Combusken', image: '256.png'},
+    {id: '257', name: 'Blaziken', image: '257.png'},
+    {id: '257M', name: 'Mega Blaziken', image: '257M.png'},
+    {id: '258', name: 'Mudkip', image: '258.png'},
+    {id: '259', name: 'Marshtomp', image: '259.png'},
+    {id: '260', name: 'Swampert', image: '260.png'},
+    {id: '260M', name: 'Mega Swampert', image: '260M.png'},
+    {id: '261', name: 'Poochyena', image: '261.png'},
+    {id: '262', name: 'Mightyena', image: '262.png'},
+    {id: '263', name: 'Zigzagoon', image: '263.png'},
+    {id: '263L', name: 'Galarian Zigzagoon', image: '263L.png'},
+    {id: '264', name: 'Linoone', image: '264.png'},
+    {id: '264L', name: 'Galarian Linoone', image: '264L.png'},
+    {id: '265', name: 'Wurmple', image: '265.png'},
+    {id: '266', name: 'Silcoon', image: '266.png'},
+    {id: '267', name: 'Beautifly', image: '267.png'},
+    {id: '268', name: 'Cascoon', image: '268.png'},
+    {id: '269', name: 'Dustox', image: '269.png'},
+    {id: '270', name: 'Lotad', image: '270.png'},
+    {id: '271', name: 'Lombre', image: '271.png'},
+    {id: '272', name: 'Ludicolo', image: '272.png'},
+    {id: '273', name: 'Seedot', image: '273.png'},
+    {id: '274', name: 'Nuzleaf', image: '274.png'},
+    {id: '275', name: 'Shiftry', image: '275.png'},
+    {id: '276', name: 'Taillow', image: '276.png'},
+    {id: '277', name: 'Swellow', image: '277.png'},
+    {id: '278', name: 'Wingull', image: '278.png'},
+    {id: '279', name: 'Pelipper', image: '279.png'},
+    {id: '280', name: 'Ralts', image: '280.png'},
+    {id: '281', name: 'Kirlia', image: '281.png'},
+    {id: '282', name: 'Gardevoir', image: '282.png'},
+    {id: '282M', name: 'Mega Gardevoir', image: '282M.png'},
+    {id: '283', name: 'Surskit', image: '283.png'},
+    {id: '284', name: 'Masquerain', image: '284.png'},
+    {id: '285', name: 'Shroomish', image: '285.png'},
+    {id: '286', name: 'Breloom', image: '286.png'},
+    {id: '287', name: 'Slakoth', image: '287.png'},
+    {id: '288', name: 'Vigoroth', image: '288.png'},
+    {id: '289', name: 'Slaking', image: '289.png'},
+    {id: '290', name: 'Nincada', image: '290.png'},
+    {id: '291', name: 'Ninjask', image: '291.png'},
+    {id: '292', name: 'Shedinja', image: '292.png'},
+    {id: '293', name: 'Whismur', image: '293.png'},
+    {id: '294', name: 'Loudred', image: '294.png'},
+    {id: '295', name: 'Exploud', image: '295.png'},
+    {id: '296', name: 'Makuhita', image: '296.png'},
+    {id: '297', name: 'Hariyama', image: '297.png'},
+    {id: '298', name: 'Azurill', image: '298.png'},
+    {id: '299', name: 'Nosepass', image: '299.png'},
+    {id: '300', name: 'Skitty', image: '300.png'},
+    {id: '301', name: 'Delcatty', image: '301.png'},
+    {id: '302', name: 'Sableye', image: '302.png'},
+    {id: '302M', name: 'Mega Sableye', image: '302M.png'},
+    {id: '303', name: 'Mawile', image: '303.png'},
+    {id: '303M', name: 'Mega Mawile', image: '303M.png'},
+    {id: '304', name: 'Aron', image: '304.png'},
+    {id: '305', name: 'Lairon', image: '305.png'},
+    {id: '306', name: 'Aggron', image: '306.png'},
+    {id: '306M', name: 'Mega Aggron', image: '306M.png'},
+    {id: '307', name: 'Meditite', image: '307.png'},
+    {id: '308', name: 'Medicham', image: '308.png'},
+    {id: '308M', name: 'Mega Medicham', image: '308M.png'},
+    {id: '309', name: 'Electrike', image: '309.png'},
+    {id: '310', name: 'Manectric', image: '310.png'},
+    {id: '310M', name: 'Mega Manectric', image: '310M.png'},
+    {id: '311', name: 'Plusle', image: '311.png'},
+    {id: '312', name: 'Minun', image: '312.png'},
+    {id: '313', name: 'Volbeat', image: '313.png'},
+    {id: '314', name: 'Illumise', image: '314.png'},
+    {id: '315', name: 'Roselia', image: '315.png'},
+    {id: '316', name: 'Gulpin', image: '316.png'},
+    {id: '317', name: 'Swalot', image: '317.png'},
+    {id: '318', name: 'Carvanha', image: '318.png'},
+    {id: '319', name: 'Sharpedo', image: '319.png'},
+    {id: '319M', name: 'Mega Sharpedo', image: '319M.png'},
+    {id: '320', name: 'Wailmer', image: '320.png'},
+    {id: '321', name: 'Wailord', image: '321.png'},
+    {id: '322', name: 'Numel', image: '322.png'},
+    {id: '323', name: 'Camerupt', image: '323.png'},
+    {id: '323M', name: 'Mega Camerupt', image: '323M.png'},
+    {id: '324', name: 'Torkoal', image: '324.png'},
+    {id: '325', name: 'Spoink', image: '325.png'},
+    {id: '326', name: 'Grumpig', image: '326.png'},
+    {id: '327', name: 'Spinda', image: '327.png'},
+    {id: '328', name: 'Trapinch', image: '328.png'},
+    {id: '329', name: 'Vibrava', image: '329.png'},
+    {id: '330', name: 'Flygon', image: '330.png'},
+    {id: '331', name: 'Cacnea', image: '331.png'},
+    {id: '332', name: 'Cacturne', image: '332.png'},
+    {id: '333', name: 'Swablu', image: '333.png'},
+    {id: '334', name: 'Altaria', image: '334.png'},
+    {id: '334M', name: 'Mega Altaria', image: '334M.png'},
+    {id: '335', name: 'Zangoose', image: '335.png'},
+    {id: '336', name: 'Seviper', image: '336.png'},
+    {id: '337', name: 'Lunatone', image: '337.png'},
+    {id: '338', name: 'Solrock', image: '338.png'},
+    {id: '339', name: 'Barboach', image: '339.png'},
+    {id: '340', name: 'Whiscash', image: '340.png'},
+    {id: '341', name: 'Corphish', image: '341.png'},
+    {id: '342', name: 'Crawdaunt', image: '342.png'},
+    {id: '343', name: 'Baltoy', image: '343.png'},
+    {id: '344', name: 'Claydol', image: '344.png'},
+    {id: '345', name: 'Lileep', image: '345.png'},
+    {id: '346', name: 'Cradily', image: '346.png'},
+    {id: '347', name: 'Anorith', image: '347.png'},
+    {id: '348', name: 'Armaldo', image: '348.png'},
+    {id: '349', name: 'Feebas', image: '349.png'},
+    {id: '350', name: 'Milotic', image: '350.png'},
+    {id: '351', name: 'Castform', image: '351.png'},
+    {id: '352', name: 'Kecleon', image: '352.png'},
+    {id: '353', name: 'Shuppet', image: '353.png'},
+    {id: '354', name: 'Banette', image: '354.png'},
+    {id: '354M', name: 'Mega Banette', image: '354M.png'},
+    {id: '355', name: 'Duskull', image: '355.png'},
+    {id: '356', name: 'Dusclops', image: '356.png'},
+    {id: '357', name: 'Tropius', image: '357.png'},
+    {id: '358', name: 'Chimecho', image: '358.png'},
+    {id: '359', name: 'Absol', image: '359.png'},
+    {id: '359M', name: 'Mega Absol', image: '359M.png'},
+    {id: '360', name: 'Wynaut', image: '360.png'},
+    {id: '361', name: 'Snorunt', image: '361.png'},
+    {id: '362', name: 'Glalie', image: '362.png'},
+    {id: '362M', name: 'Mega Glalie', image: '362M.png'},
+    {id: '363', name: 'Spheal', image: '363.png'},
+    {id: '364', name: 'Sealeo', image: '364.png'},
+    {id: '365', name: 'Walrein', image: '365.png'},
+    {id: '366', name: 'Clamperl', image: '366.png'},
+    {id: '367', name: 'Huntail', image: '367.png'},
+    {id: '368', name: 'Gorebyss', image: '368.png'},
+    {id: '369', name: 'Relicanth', image: '369.png'},
+    {id: '370', name: 'Luvdisc', image: '370.png'},
+    {id: '371', name: 'Bagon', image: '371.png'},
+    {id: '372', name: 'Shelgon', image: '372.png'},
+    {id: '373', name: 'Salamence', image: '373.png'},
+    {id: '373M', name: 'Mega Salamence', image: '373M.png'},
+    {id: '374', name: 'Beldum', image: '374.png'},
+    {id: '375', name: 'Metang', image: '375.png'},
+    {id: '376', name: 'Metagross', image: '376.png'},
+    {id: '376M', name: 'Mega Metagross', image: '376M.png'},
+    {id: '377', name: 'Regirock', image: '377.png'},
+    {id: '378', name: 'Regice', image: '378.png'},
+    {id: '379', name: 'Registeel', image: '379.png'},
+    {id: '380', name: 'Latias', image: '380.png'},
+    {id: '380M', name: 'Mega Latias', image: '380M.png'},
+    {id: '381', name: 'Latios', image: '381.png'},
+    {id: '381M', name: 'Mega Latios', image: '381M.png'},
+    {id: '382', name: 'Kyogre', image: '382.png'},
+    {id: '382F', name: 'Primal Kyogre', image: '382F.png'},
+    {id: '383', name: 'Groudon', image: '383.png'},
+    {id: '383F', name: 'Primal Groudon', image: '383F.png'},
+    {id: '384', name: 'Rayquaza', image: '384.png'},
+    {id: '384M', name: 'Mega Rayquaza', image: '384M.png'},
+    {id: '385', name: 'Jirachi', image: '385.png'},
+    {id: '386', name: 'Deoxys-Normal', image: '386.png'},
+    {id: '386F_A', name: 'Deoxys-Attack', image: '386F_A.png'},
+    {id: '386F_D', name: 'Deoxys-Defence', image: '386F_D.png'},
+    {id: '386F_S', name: 'Deoxys-Speed', image: '386F_S.png'},
+    {id: '387', name: 'Turtwig', image: '387.png'},
+    {id: '388', name: 'Grotle', image: '388.png'},
+    {id: '389', name: 'Torterra', image: '389.png'},
+    {id: '390', name: 'Chimchar', image: '390.png'},
+    {id: '391', name: 'Monferno', image: '391.png'},
+    {id: '392', name: 'Infernape', image: '392.png'},
+    {id: '393', name: 'Piplup', image: '393.png'},
+    {id: '394', name: 'Prinplup', image: '394.png'},
+    {id: '395', name: 'Empoleon', image: '395.png'},
+    {id: '396', name: 'Starly', image: '396.png'},
+    {id: '397', name: 'Staravia', image: '397.png'},
+    {id: '398', name: 'Staraptor', image: '398.png'},
+    {id: '399', name: 'Bidoof', image: '399.png'},
+    {id: '400', name: 'Bibarel', image: '400.png'},
+    {id: '401', name: 'Kricketot', image: '401.png'},
+    {id: '402', name: 'Kricketune', image: '402.png'},
+    {id: '403', name: 'Shinx', image: '403.png'},
+    {id: '404', name: 'Luxio', image: '404.png'},
+    {id: '405', name: 'Luxray', image: '405.png'},
+    {id: '406', name: 'Budew', image: '406.png'},
+    {id: '407', name: 'Roserade', image: '407.png'},
+    {id: '408', name: 'Cranidos', image: '408.png'},
+    {id: '409', name: 'Rampardos', image: '409.png'},
+    {id: '410', name: 'Shieldon', image: '410.png'},
+    {id: '411', name: 'Bastiodon', image: '411.png'},
+    {id: '412', name: 'Burmy-Plant', image: '412.png'},
+    {id: '412F_S', name: 'Burmy-Sandy', image: '412F_S.png'},
+    {id: '412F_T', name: 'Burmy-Trash', image: '412F_T.png'},
+    {id: '413', name: 'Wormadam-Plant', image: '413.png'},
+    {id: '413F_S', name: 'Wormadam-Sandy', image: '413F_S.png'},
+    {id: '413F_T', name: 'Wormadam-Trash', image: '413F_T.png'},
+    {id: '414', name: 'Mothim', image: '414.png'},
+    {id: '415', name: 'Combee', image: '415.png'},
+    {id: '416', name: 'Vespiquen', image: '416.png'},
+    {id: '417', name: 'Pachirisu', image: '417.png'},
+    {id: '418', name: 'Buizel', image: '418.png'},
+    {id: '419', name: 'Floatzel', image: '419.png'},
+    {id: '420', name: 'Cherubi', image: '420.png'},
+    {id: '421', name: 'Cherrim-Overcast', image: '421.png'},
+    {id: '421F', name: 'Cherrim-Sunshine', image: '421F.png'},
+    {id: '422', name: 'Shellos-East', image: '422.png'},
+    {id: '422F', name: 'Shellos-West', image: '422F.png'},
+    {id: '423', name: 'Gastrodon-East', image: '423.png'},
+    {id: '423F', name: 'Gastrodon-West', image: '423F.png'},
+    {id: '424', name: 'Ambipom', image: '424.png'},
+    {id: '425', name: 'Drifloon', image: '425.png'},
+    {id: '426', name: 'Drifblim', image: '426.png'},
+    {id: '427', name: 'Buneary', image: '427.png'},
+    {id: '428', name: 'Lopunny', image: '428.png'},
+    {id: '428M', name: 'Mega Lopunny', image: '428M.png'},
+    {id: '429', name: 'Mismagius', image: '429.png'},
+    {id: '430', name: 'Honchkrow', image: '430.png'},
+    {id: '431', name: 'Glameow', image: '431.png'},
+    {id: '432', name: 'Purugly', image: '432.png'},
+    {id: '433', name: 'Chingling', image: '433.png'},
+    {id: '434', name: 'Stunky', image: '434.png'},
+    {id: '435', name: 'Skuntank', image: '435.png'},
+    {id: '436', name: 'Bronzor', image: '436.png'},
+    {id: '437', name: 'Bronzong', image: '437.png'},
+    {id: '438', name: 'Bonsly', image: '438.png'},
+    {id: '439', name: 'Mime Jr', image: '439.png'},
+    {id: '440', name: 'Happiny', image: '440.png'},
+    {id: '441', name: 'Chatot', image: '441.png'},
+    {id: '442', name: 'Spiritomb', image: '442.png'},
+    {id: '443', name: 'Gible', image: '443.png'},
+    {id: '444', name: 'Gabite', image: '444.png'},
+    {id: '445', name: 'Garchomp', image: '445.png'},
+    {id: '445M', name: 'Mega Garchomp', image: '445M.png'},
+    {id: '446', name: 'Munchlax', image: '446.png'},
+    {id: '447', name: 'Riolu', image: '447.png'},
+    {id: '448', name: 'Lucario', image: '448.png'},
+    {id: '448M', name: 'Mega Lucario', image: '448M.png'},
+    {id: '449', name: 'Hippopotas', image: '449.png'},
+    {id: '450', name: 'Hippowdon', image: '450.png'},
+    {id: '451', name: 'Skorupi', image: '451.png'},
+    {id: '452', name: 'Drapion', image: '452.png'},
+    {id: '453', name: 'Croagunk', image: '453.png'},
+    {id: '454', name: 'Toxicroak', image: '454.png'},
+    {id: '455', name: 'Carnivine', image: '455.png'},
+    {id: '456', name: 'Finneon', image: '456.png'},
+    {id: '457', name: 'Lumineon', image: '457.png'},
+    {id: '458', name: 'Mantyke', image: '458.png'},
+    {id: '459', name: 'Snover', image: '459.png'},
+    {id: '460', name: 'Abomasnow', image: '460.png'},
+    {id: '460M', name: 'Mega Abomasnow', image: '460M.png'},
+    {id: '461', name: 'Weavile', image: '461.png'},
+    {id: '462', name: 'Magnezone', image: '462.png'},
+    {id: '463', name: 'Lickilicky', image: '463.png'},
+    {id: '464', name: 'Rhyperior', image: '464.png'},
+    {id: '465', name: 'Tangrowth', image: '465.png'},
+    {id: '466', name: 'Electivire', image: '466.png'},
+    {id: '467', name: 'Magmortar', image: '467.png'},
+    {id: '468', name: 'Togekiss', image: '468.png'},
+    {id: '469', name: 'Yanmega', image: '469.png'},
+    {id: '470', name: 'Leafeon', image: '470.png'},
+    {id: '471', name: 'Glaceon', image: '471.png'},
+    {id: '472', name: 'Gliscor', image: '472.png'},
+    {id: '473', name: 'Mamoswine', image: '473.png'},
+    {id: '474', name: 'Porygon-Z', image: '474.png'},
+    {id: '475', name: 'Gallade', image: '475.png'},
+    {id: '475M', name: 'Mega Gallade', image: '475M.png'},
+    {id: '476', name: 'Probopass', image: '476.png'},
+    {id: '477', name: 'Dusknoir', image: '477.png'},
+    {id: '478', name: 'Froslass', image: '478.png'},
+    {id: '479', name: 'Rotom', image: '479.png'},
+    {id: '479F_H', name: 'Rotom Heat', image: '479F_H.png'},
+    {id: '479F_W', name: 'Rotom Wash', image: '479F_W.png'},
+    {id: '479F_FR', name: 'Rotom Frost', image: '479F_FR.png'},
+    {id: '479F_F', name: 'Rotom Fan', image: '479F_F.png'},
+    {id: '479F_M', name: 'Rotom Mow', image: '479F_M.png'},
+    {id: '480', name: 'Uxie', image: '480.png'},
+    {id: '481', name: 'Mesprit', image: '481.png'},
+    {id: '482', name: 'Azelf', image: '482.png'},
+    {id: '483', name: 'Dialga', image: '483.png'},
+    {id: '483F', name: 'Origin Forme Dialga', image: '483F.png'},
+    {id: '484', name: 'Palkia', image: '484.png'},
+    {id: '484F', name: 'Origin Forme Palkia', image: '484F.png'},
+    {id: '485', name: 'Heatran', image: '485.png'},
+    {id: '486', name: 'Regigigas', image: '486.png'},
+    {id: '487', name: 'Giratina', image: '487.png'},
+    {id: '487F', name: 'Origin Forme Giratina', image: '487F.png'},
+    {id: '488', name: 'Cresselia', image: '488.png'},
+    {id: '489', name: 'Phione', image: '489.png'},
+    {id: '490', name: 'Manaphy', image: '490.png'},
+    {id: '491', name: 'Darkrai', image: '491.png'},
+    {id: '492', name: 'Shaymin', image: '492.png'},
+    {id: '492F', name: 'Shaymin Sky Forme', image: '492F.png'},
+    {id: '493', name: 'Arceus', image: '493.png'},
+    {id: '494', name: 'Victini', image: '494.png'},
+    {id: '495', name: 'Snivy', image: '495.png'},
+    {id: '496', name: 'Servine', image: '496.png'},
+    {id: '497', name: 'Serperior', image: '497.png'},
+    {id: '498', name: 'Tepig', image: '498.png'},
+    {id: '499', name: 'Pignite', image: '499.png'},
+    {id: '500', name: 'Emboar', image: '500.png'},
+    {id: '501', name: 'Oshawott', image: '501.png'},
+    {id: '502', name: 'Dewott', image: '502.png'},
+    {id: '503', name: 'Samurott', image: '503.png'},
+    {id: '503H', name: 'Hisuian Samurott', image: '503H.png'},
+    {id: '504', name: 'Patrat', image: '504.png'},
+    {id: '505', name: 'Watchog', image: '505.png'},
+    {id: '506', name: 'Lillipup', image: '506.png'},
+    {id: '507', name: 'Herdier', image: '507.png'},
+    {id: '508', name: 'Stoutland', image: '508.png'},
+    {id: '509', name: 'Purrloin', image: '509.png'},
+    {id: '510', name: 'Liepard', image: '510.png'},
+    {id: '511', name: 'Pansage', image: '511.png'},
+    {id: '512', name: 'Simisage', image: '512.png'},
+    {id: '513', name: 'Pansear', image: '513.png'},
+    {id: '514', name: 'Simisear', image: '514.png'},
+    {id: '515', name: 'Panpour', image: '515.png'},
+    {id: '516', name: 'Simipour', image: '516.png'},
+    {id: '517', name: 'Munna', image: '517.png'},
+    {id: '518', name: 'Musharna', image: '518.png'},
+    {id: '519', name: 'Pidove', image: '519.png'},
+    {id: '520', name: 'Tranquill', image: '520.png'},
+    {id: '521', name: 'Unfezant-Male', image: '521.png'},
+    {id: '521F', name: 'Unfezant-Female', image: '521F.png'},
+    {id: '522', name: 'Blitzle', image: '522.png'},
+    {id: '523', name: 'Zebstrika', image: '523.png'},
+    {id: '524', name: 'Roggenrola', image: '524.png'},
+    {id: '525', name: 'Boldore', image: '525.png'},
+    {id: '526', name: 'Gigalith', image: '526.png'},
+    {id: '527', name: 'Woobat', image: '527.png'},
+    {id: '528', name: 'Swoobat', image: '528.png'},
+    {id: '529', name: 'Drilbur', image: '529.png'},
+    {id: '530', name: 'Excadrill', image: '530.png'},
+    {id: '531', name: 'Audino', image: '531.png'},
+    {id: '531M', name: 'Mega Audino', image: '531M.png'},
+    {id: '532', name: 'Timburr', image: '532.png'},
+    {id: '533', name: 'Gurdurr', image: '533.png'},
+    {id: '534', name: 'Conkeldurr', image: '534.png'},
+    {id: '535', name: 'Tympole', image: '535.png'},
+    {id: '536', name: 'Palpitoad', image: '536.png'},
+    {id: '537', name: 'Seismitoad', image: '537.png'},
+    {id: '538', name: 'Throh', image: '538.png'},
+    {id: '539', name: 'Sawk', image: '539.png'},
+    {id: '540', name: 'Sewaddle', image: '540.png'},
+    {id: '541', name: 'Swadloon', image: '541.png'},
+    {id: '542', name: 'Leavanny', image: '542.png'},
+    {id: '543', name: 'Venipede', image: '543.png'},
+    {id: '544', name: 'Whirlipede', image: '544.png'},
+    {id: '545', name: 'Scolipede', image: '545.png'},
+    {id: '546', name: 'Cottonee', image: '546.png'},
+    {id: '547', name: 'Whimsicott', image: '547.png'},
+    {id: '548', name: 'Petilil', image: '548.png'},
+    {id: '549', name: 'Lilligant', image: '549.png'},
+    {id: '549H', name: 'Hisuian Lilligant', image: '549H.png'},
+    {id: '550', name: 'Basculin', image: '550.png'},
+    {id: '551', name: 'Sandile', image: '551.png'},
+    {id: '552', name: 'Krokorok', image: '552.png'},
+    {id: '553', name: 'Krookodile', image: '553.png'},
+    {id: '554', name: 'Darumaka', image: '554.png'},
+    {id: '554L', name: 'Galarian Darumaka', image: '554L.png'},
+    {id: '555', name: 'Darmanitan', image: '555.png'},
+    {id: '555L', name: 'Galarian Darmanitan', image: '555L.png'},
+    {id: '556', name: 'Maractus', image: '556.png'},
+    {id: '557', name: 'Dwebble', image: '557.png'},
+    {id: '558', name: 'Crustle', image: '558.png'},
+    {id: '559', name: 'Scraggy', image: '559.png'},
+    {id: '560', name: 'Scrafty', image: '560.png'},
+    {id: '561', name: 'Sigilyph', image: '561.png'},
+    {id: '562', name: 'Yamask', image: '562.png'},
+    {id: '562L', name: 'Galarian Yamask', image: '562L.png'},
+    {id: '563', name: 'Cofagrigus', image: '563.png'},
+    {id: '564', name: 'Tirtouga', image: '564.png'},
+    {id: '565', name: 'Carracosta', image: '565.png'},
+    {id: '566', name: 'Archen', image: '566.png'},
+    {id: '567', name: 'Archeops', image: '567.png'},
+    {id: '568', name: 'Trubbish', image: '568.png'},
+    {id: '569', name: 'Garbodor', image: '569.png'},
+    {id: '569G', name: 'Gmax Garbodor', image: '569G.png'},
+    {id: '570', name: 'Zorua', image: '570.png'},
+    {id: '570H', name: 'Hisuian Zorua', image: '570H.png'},
+    {id: '571', name: 'Zoroark', image: '571.png'},
+    {id: '571H', name: 'Hisuian Zoroark', image: '571H.png'},
+    {id: '572', name: 'Minccino', image: '572.png'},
+    {id: '573', name: 'Cinccino', image: '573.png'},
+    {id: '574', name: 'Gothita', image: '574.png'},
+    {id: '575', name: 'Gothorita', image: '575.png'},
+    {id: '576', name: 'Gothitelle', image: '576.png'},
+    {id: '577', name: 'Solosis', image: '577.png'},
+    {id: '578', name: 'Duosion', image: '578.png'},
+    {id: '579', name: 'Reuniclus', image: '579.png'},
+    {id: '580', name: 'Ducklett', image: '580.png'},
+    {id: '581', name: 'Swanna', image: '581.png'},
+    {id: '582', name: 'Vanillite', image: '582.png'},
+    {id: '583', name: 'Vanillish', image: '583.png'},
+    {id: '584', name: 'Vanilluxe', image: '584.png'},
+    {id: '585', name: 'Deerling', image: '585.png'},
+    {id: '586', name: 'Sawsbuck-Spring', image: '586.png'},
+    {id: '586F_S', name: 'Sawsbuck-Summer', image: '586F_S.png'},
+    {id: '586F_A', name: 'Sawsbuck-Autumn', image: '586F_A.png'},
+    {id: '586F_W', name: 'Sawsbuck-Winter', image: '586F_W.png'},
+    {id: '587', name: 'Emolga', image: '587.png'},
+    {id: '588', name: 'Karrablast', image: '588.png'},
+    {id: '589', name: 'Escavalier', image: '589.png'},
+    {id: '590', name: 'Foongus', image: '590.png'},
+    {id: '591', name: 'Amoonguss', image: '591.png'},
+    {id: '592', name: 'Frillish', image: '592.png'},
+    {id: '593', name: 'Jellicent-Male', image: '593.png'},
+    {id: '593F', name: 'Jellicent-Female', image: '593F.png'},
+    {id: '594', name: 'Alomomola', image: '594.png'},
+    {id: '595', name: 'Joltik', image: '595.png'},
+    {id: '596', name: 'Galvantula', image: '596.png'},
+    {id: '597', name: 'Ferroseed', image: '597.png'},
+    {id: '598', name: 'Ferrothorn', image: '598.png'},
+    {id: '599', name: 'Klink', image: '599.png'},
+    {id: '600', name: 'Klang', image: '600.png'},
+    {id: '601', name: 'Klinklang', image: '601.png'},
+    {id: '602', name: 'Tynamo', image: '602.png'},
+    {id: '603', name: 'Eelektrik', image: '603.png'},
+    {id: '604', name: 'Eelektross', image: '604.png'},
+    {id: '605', name: 'Elgyem', image: '605.png'},
+    {id: '606', name: 'Beheeyem', image: '606.png'},
+    {id: '607', name: 'Litwick', image: '607.png'},
+    {id: '608', name: 'Lampent', image: '608.png'},
+    {id: '609', name: 'Chandelure', image: '609.png'},
+    {id: '610', name: 'Axew', image: '610.png'},
+    {id: '611', name: 'Fraxure', image: '611.png'},
+    {id: '612', name: 'Haxorus', image: '612.png'},
+    {id: '613', name: 'Cubchoo', image: '613.png'},
+    {id: '614', name: 'Beartic', image: '614.png'},
+    {id: '615', name: 'Cryogonal', image: '615.png'},
+    {id: '616', name: 'Shelmet', image: '616.png'},
+    {id: '617', name: 'Accelgor', image: '617.png'},
+    {id: '618', name: 'Stunfisk', image: '618.png'},
+    {id: '618L', name: 'Galarian Stunfisk', image: '618L.png'},
+    {id: '619', name: 'Mienfoo', image: '619.png'},
+    {id: '620', name: 'Mienshao', image: '620.png'},
+    {id: '621', name: 'Druddigon', image: '621.png'},
+    {id: '622', name: 'Golett', image: '622.png'},
+    {id: '623', name: 'Golurk', image: '623.png'},
+    {id: '624', name: 'Pawniard', image: '624.png'},
+    {id: '625', name: 'Bisharp', image: '625.png'},
+    {id: '626', name: 'Bouffalant', image: '626.png'},
+    {id: '627', name: 'Rufflet', image: '627.png'},
+    {id: '628', name: 'Braviary', image: '628.png'},
+    {id: '628H', name: 'Hisuian Braviary', image: '628H.png'},
+    {id: '629', name: 'Vullaby', image: '629.png'},
+    {id: '630', name: 'Mandibuzz', image: '630.png'},
+    {id: '631', name: 'Heatmor', image: '631.png'},
+    {id: '632', name: 'Durant', image: '632.png'},
+    {id: '633', name: 'Deino', image: '633.png'},
+    {id: '634', name: 'Zweilous', image: '634.png'},
+    {id: '635', name: 'Hydreigon', image: '635.png'},
+    {id: '636', name: 'Larvesta', image: '636.png'},
+    {id: '637', name: 'Volcarona', image: '637.png'},
+    {id: '638', name: 'Cobalion', image: '638.png'},
+    {id: '639', name: 'Terrakion', image: '639.png'},
+    {id: '640', name: 'Virizion', image: '640.png'},
+    {id: '641', name: 'Tornadus', image: '641.png'},
+    {id: '641F', name: 'Tornadus-Therian', image: '641F.png'},
+    {id: '642', name: 'Thundurus', image: '642.png'},
+    {id: '642F', name: 'Thundurus-Therian', image: '642F.png'},
+    {id: '643', name: 'Reshiram', image: '643.png'},
+    {id: '644', name: 'Zekrom', image: '644.png'},
+    {id: '645', name: 'Landorus', image: '645.png'},
+    {id: '645F', name: 'Landorus-Therian', image: '645F.png'},
+    {id: '646', name: 'Kyurem', image: '646.png'},
+    {id: '646F_W', name: 'Kyurem White', image: '646F_W.png'},
+    {id: '646F_B', name: 'Kyurem Black', image: '646F_B.png'},
+    {id: '647', name: 'Keldeo', image: '647.png'},
+    {id: '647F', name: 'Keldeo-Resolute', image: '647F.png'},
+    {id: '648', name: 'Meloetta-Aria', image: '648.png'},
+    {id: '648F', name: 'Meloetta-Pirouette', image: '648F.png'},
+    {id: '649', name: 'Genesect', image: '649.png'},
+    {id: '650', name: 'Chespin', image: '650.png'},
+    {id: '651', name: 'Quilladin', image: '651.png'},
+    {id: '652', name: 'Chesnaught', image: '652.png'},
+    {id: '653', name: 'Fennekin', image: '653.png'},
+    {id: '654', name: 'Braixen', image: '654.png'},
+    {id: '655', name: 'Delphox', image: '655.png'},
+    {id: '656', name: 'Froakie', image: '656.png'},
+    {id: '657', name: 'Frogadier', image: '657.png'},
+    {id: '658', name: 'Greninja', image: '658.png'},
+    {id: '659', name: 'Bunnelby', image: '659.png'},
+    {id: '660', name: 'Diggersby', image: '660.png'},
+    {id: '661', name: 'Fletchling', image: '661.png'},
+    {id: '662', name: 'Fletchinder', image: '662.png'},
+    {id: '663', name: 'Talonflame', image: '663.png'},
+    {id: '664', name: 'Scatterbug', image: '664.png'},
+    {id: '665', name: 'Spewpa', image: '665.png'},
+    {id: '666', name: 'Vivillon', image: '666.png'},
+    {id: '667', name: 'Litleo', image: '667.png'},
+    {id: '668', name: 'Pyroar-Male', image: '668.png'},
+    {id: '668F', name: 'Pyroar-Female', image: '668F.png'},
+    {id: '669', name: 'Flabébé', image: '669.png'},
+    {id: '670', name: 'Floette', image: '670.png'},
+    {id: '671', name: 'Florges', image: '671.png'},
+    {id: '672', name: 'Skiddo', image: '672.png'},
+    {id: '673', name: 'Gogoat', image: '673.png'},
+    {id: '674', name: 'Pancham', image: '674.png'},
+    {id: '675', name: 'Pangoro', image: '675.png'},
+    {id: '676', name: 'Furfrou', image: '676.png'},
+    {id: '677', name: 'Espurr', image: '677.png'},
+    {id: '678', name: 'Meowstic-Female', image: '678.png'},
+    {id: '678F', name: 'Meowstic-Male', image: '678F.png'},
+    {id: '679', name: 'Honedge', image: '679.png'},
+    {id: '680', name: 'Doublade', image: '680.png'},
+    {id: '681', name: 'Aegislash', image: '681.png'},
+    {id: '682', name: 'Spritzee', image: '682.png'},
+    {id: '683', name: 'Aromatisse', image: '683.png'},
+    {id: '684', name: 'Swirlix', image: '684.png'},
+    {id: '685', name: 'Slurpuff', image: '685.png'},
+    {id: '686', name: 'Inkay', image: '686.png'},
+    {id: '687', name: 'Malamar', image: '687.png'},
+    {id: '688', name: 'Binacle', image: '688.png'},
+    {id: '689', name: 'Barbaracle', image: '689.png'},
+    {id: '690', name: 'Skrelp', image: '690.png'},
+    {id: '691', name: 'Dragalge', image: '691.png'},
+    {id: '692', name: 'Clauncher', image: '692.png'},
+    {id: '693', name: 'Clawitzer', image: '693.png'},
+    {id: '694', name: 'Helioptile', image: '694.png'},
+    {id: '695', name: 'Heliolisk', image: '695.png'},
+    {id: '696', name: 'Tyrunt', image: '696.png'},
+    {id: '697', name: 'Tyrantrum', image: '697.png'},
+    {id: '698', name: 'Amaura', image: '698.png'},
+    {id: '699', name: 'Aurorus', image: '699.png'},
+    {id: '700', name: 'Sylveon', image: '700.png'},
+    {id: '701', name: 'Hawlucha', image: '701.png'},
+    {id: '702', name: 'Dedenne', image: '702.png'},
+    {id: '703', name: 'Carbink', image: '703.png'},
+    {id: '704', name: 'Goomy', image: '704.png'},
+    {id: '705', name: 'Sliggoo', image: '705.png'},
+    {id: '705H', name: 'Hisuian Sliggoo', image: '705H.png'},
+    {id: '706', name: 'Goodra', image: '706.png'},
+    {id: '706H', name: 'Hisuian Goodra', image: '706H.png'},
+    {id: '707', name: 'Klefki', image: '707.png'},
+    {id: '708', name: 'Phantump', image: '708.png'},
+    {id: '709', name: 'Trevenant', image: '709.png'},
+    {id: '710', name: 'Pumpkaboo', image: '710.png'},
+    {id: '711', name: 'Gourgeist', image: '711.png'},
+    {id: '712', name: 'Bergmite', image: '712.png'},
+    {id: '713', name: 'Avalugg', image: '713.png'},
+    {id: '713H', name: 'Hisuian Avalugg', image: '713H.png'},
+    {id: '714', name: 'Noibat', image: '714.png'},
+    {id: '715', name: 'Noivern', image: '715.png'},
+    {id: '716', name: 'Xerneas', image: '716.png'},
+    {id: '717', name: 'Yveltal', image: '717.png'},
+    {id: '718', name: 'Zygarde-50%', image: '718.png'},
+    {id: '718F_10', name: 'Zygarde-10%', image: '718F_10.png'},
+    {id: '718F_C', name: 'Zygarde-Complete', image: '718F_C.png'},
+    {id: '719', name: 'Diancie', image: '719.png'},
+    {id: '719M', name: 'Mega Diancie', image: '719M.png'},
+    {id: '720', name: 'Hoopa-Confined', image: '720.png'},
+    {id: '720F', name: 'Hoopa-Unbound', image: '720F.png'},
+    {id: '721', name: 'Volcanion', image: '721.png'},
+    {id: '722', name: 'Rowlet', image: '722.png'},
+    {id: '723', name: 'Dartrix', image: '723.png'},
+    {id: '724', name: 'Decidueye', image: '724.png'},
+    {id: '724H', name: 'Hisuian Decidueye', image: '724H.png'},
+    {id: '725', name: 'Litten', image: '725.png'},
+    {id: '726', name: 'Torracat', image: '726.png'},
+    {id: '727', name: 'Incineroar', image: '727.png'},
+    {id: '728', name: 'Popplio', image: '728.png'},
+    {id: '729', name: 'Brionne', image: '729.png'},
+    {id: '730', name: 'Primarina', image: '730.png'},
+    {id: '731', name: 'Pikipek', image: '731.png'},
+    {id: '732', name: 'Trumbeak', image: '732.png'},
+    {id: '733', name: 'Toucannon', image: '733.png'},
+    {id: '734', name: 'Yungoos', image: '734.png'},
+    {id: '735', name: 'Gumshoos', image: '735.png'},
+    {id: '736', name: 'Grubbin', image: '736.png'},
+    {id: '737', name: 'Charjabug', image: '737.png'},
+    {id: '738', name: 'Vikavolt', image: '738.png'},
+    {id: '739', name: 'Crabrawler', image: '739.png'},
+    {id: '740', name: 'Crabominable', image: '740.png'},
+    {id: '741', name: 'Oricorio-Baile', image: '741.png'},
+    {id: '741F_PP', name: 'Oricorio-Pom-Pom', image: '741F_PP.png'},
+    {id: '741F_P', name: 'Oricorio-Pa\'u', image: '741F_P.png'},
+    {id: '741F_S', name: 'Oricorio-Sensu', image: '741F_S.png'},
+    {id: '742', name: 'Cutiefly', image: '742.png'},
+    {id: '743', name: 'Ribombee', image: '743.png'},
+    {id: '744', name: 'Rockruff', image: '744.png'},
+    {id: '745', name: 'Lycanroc-Midday', image: '745.png'},
+    {id: '745F', name: 'Lycanroc-Midnight', image: '745F.png'},
+    {id: '746', name: 'Wishiwashi-Solo', image: '746.png'},
+    {id: '746F', name: 'Wishiwashi-School', image: '746F.png'},
+    {id: '747', name: 'Mareanie', image: '747.png'},
+    {id: '748', name: 'Toxapex', image: '748.png'},
+    {id: '749', name: 'Mudbray', image: '749.png'},
+    {id: '750', name: 'Mudsdale', image: '750.png'},
+    {id: '751', name: 'Dewpider', image: '751.png'},
+    {id: '752', name: 'Araquanid', image: '752.png'},
+    {id: '753', name: 'Fomantis', image: '753.png'},
+    {id: '754', name: 'Lurantis', image: '754.png'},
+    {id: '755', name: 'Morelull', image: '755.png'},
+    {id: '756', name: 'Shiinotic', image: '756.png'},
+    {id: '757', name: 'Salandit', image: '757.png'},
+    {id: '758', name: 'Salazzle', image: '758.png'},
+    {id: '759', name: 'Stufful', image: '759.png'},
+    {id: '760', name: 'Bewear', image: '760.png'},
+    {id: '761', name: 'Bounsweet', image: '761.png'},
+    {id: '762', name: 'Steenee', image: '762.png'},
+    {id: '763', name: 'Tsareena', image: '763.png'},
+    {id: '764', name: 'Comfey', image: '764.png'},
+    {id: '765', name: 'Oranguru', image: '765.png'},
+    {id: '766', name: 'Passimian', image: '766.png'},
+    {id: '767', name: 'Wimpod', image: '767.png'},
+    {id: '768', name: 'Golisopod', image: '768.png'},
+    {id: '769', name: 'Sandygast', image: '769.png'},
+    {id: '770', name: 'Palossand', image: '770.png'},
+    {id: '771', name: 'Pyukumuku', image: '771.png'},
+    {id: '772', name: 'Type: Null', image: '772.png'},
+    {id: '773', name: 'Silvally', image: '773.png'},
+    {id: '774', name: 'Minior-Meteor', image: '774.png'},
+    {id: '774F', name: 'Minior-Core', image: '774F.png'},
+    {id: '775', name: 'Komala', image: '775.png'},
+    {id: '776', name: 'Turtonator', image: '776.png'},
+    {id: '777', name: 'Togedemaru', image: '777.png'},
+    {id: '778', name: 'Mimikyu', image: '778.png'},
+    {id: '779', name: 'Bruxish', image: '779.png'},
+    {id: '780', name: 'Drampa', image: '780.png'},
+    {id: '781', name: 'Dhelmise', image: '781.png'},
+    {id: '782', name: 'Jangmo-o', image: '782.png'},
+    {id: '783', name: 'Hakamo-o', image: '783.png'},
+    {id: '784', name: 'Kommo-o', image: '784.png'},
+    {id: '785', name: 'Tapu Koko', image: '785.png'},
+    {id: '786', name: 'Tapu Lele', image: '786.png'},
+    {id: '787', name: 'Tapu Bulu', image: '787.png'},
+    {id: '788', name: 'Tapu Fini', image: '788.png'},
+    {id: '789', name: 'Cosmog', image: '789.png'},
+    {id: '790', name: 'Cosmoem', image: '790.png'},
+    {id: '791', name: 'Solgaleo', image: '791.png'},
+    {id: '792', name: 'Lunala', image: '792.png'},
+    {id: '793', name: 'Nihilego', image: '793.png'},
+    {id: '794', name: 'Buzzwole', image: '794.png'},
+    {id: '795', name: 'Pheromosa', image: '795.png'},
+    {id: '796', name: 'Xurkitree', image: '796.png'},
+    {id: '797', name: 'Celesteela', image: '797.png'},
+    {id: '798', name: 'Kartana', image: '798.png'},
+    {id: '799', name: 'Guzzlord', image: '799.png'},
+    {id: '800', name: 'Necrozma', image: '800.png'},
+    {id: '800f_s', name: 'Dusk Mane Necrozma', image: '800f_s.png'},
+    {id: '800f_l', name: 'Dawn Wings Necrozma', image: '800f_l.png'},
+    {id: '800_u', name: 'Ultra Necrozma', image: '800_u.png'},
+    {id: '801', name: 'Magearna', image: '801.png'},
+    {id: '802', name: 'Marshadow', image: '802.png'},
+    {id: '803', name: 'Poipole', image: '803.png'},
+    {id: '804', name: 'Naganadel', image: '804.png'},
+    {id: '805', name: 'Stakataka', image: '805.png'},
+    {id: '806', name: 'Blacephalon', image: '806.png'},
+    {id: '807', name: 'Zeraora', image: '807.png'},
+    {id: '808', name: 'Meltan', image: '808.png'},
+    {id: '809', name: 'Melmetal', image: '809.png'},
+    {id: '809G', name: 'Gmax Melmetal', image: '809G.png'},
+    {id: '810', name: 'Grookey', image: '810.png'},
+    {id: '811', name: 'Thwackey', image: '811.png'},
+    {id: '812', name: 'Rillaboom', image: '812.png'},
+    {id: '812G', name: 'Gmax Rillaboom', image: '812G.png'},
+    {id: '813', name: 'Scorbunny', image: '813.png'},
+    {id: '814', name: 'Raboot', image: '814.png'},
+    {id: '815', name: 'Cinderace', image: '815.png'},
+    {id: '815G', name: 'Gmax Cinderace', image: '815G.png'},
+    {id: '816', name: 'Sobble', image: '816.png'},
+    {id: '817', name: 'Drizzile', image: '817.png'},
+    {id: '818', name: 'Inteleon', image: '818.png'},
+    {id: '818G', name: 'Gmax Inteleon', image: '818G.png'},
+    {id: '819', name: 'Skwovet', image: '819.png'},
+    {id: '820', name: 'Greedent', image: '820.png'},
+    {id: '821', name: 'Rookidee', image: '821.png'},
+    {id: '822', name: 'Corvisquire', image: '822.png'},
+    {id: '823', name: 'Corviknight', image: '823.png'},
+    {id: '823G', name: 'Gmax Corviknight', image: '823G.png'},
+    {id: '824', name: 'Blipbug', image: '824.png'},
+    {id: '825', name: 'Dottler', image: '825.png'},
+    {id: '826', name: 'Orbeetle', image: '826.png'},
+    {id: '826G', name: 'Gmax Orbeetle', image: '826G.png'},
+    {id: '827', name: 'Nickit', image: '827.png'},
+    {id: '828', name: 'Thievul', image: '828.png'},
+    {id: '829', name: 'Gossifleur', image: '829.png'},
+    {id: '830', name: 'Eldegoss', image: '830.png'},
+    {id: '831', name: 'Wooloo', image: '831.png'},
+    {id: '832', name: 'Dubwool', image: '832.png'},
+    {id: '833', name: 'Chewtle', image: '833.png'},
+    {id: '834', name: 'Drednaw', image: '834.png'},
+    {id: '834G', name: 'Gmax Drednaw', image: '834G.png'},
+    {id: '835', name: 'Yamper', image: '835.png'},
+    {id: '836', name: 'Boltund', image: '836.png'},
+    {id: '837', name: 'Rolycoly', image: '837.png'},
+    {id: '838', name: 'Carkol', image: '838.png'},
+    {id: '839', name: 'Coalossal', image: '839.png'},
+    {id: '839G', name: 'Gmax Coalossal', image: '839G.png'},
+    {id: '840', name: 'Applin', image: '840.png'},
+    {id: '840G', name: 'Gmax Applin Evo', image: '840G.png'},
+    {id: '841', name: 'Flapple', image: '841.png'},
+    {id: '842', name: 'Appletun', image: '842.png'},
+    {id: '843', name: 'Silicobra', image: '843.png'},
+    {id: '844', name: 'Sandaconda', image: '844.png'},
+    {id: '844G', name: 'Gmax Sandaconda', image: '844G.png'},
+    {id: '845', name: 'Cramorant', image: '845.png'},
+    {id: '846', name: 'Arrokuda', image: '846.png'},
+    {id: '847', name: 'Barraskewda', image: '847.png'},
+    {id: '848', name: 'Toxel', image: '848.png'},
+    {id: '849', name: 'Toxtricity-Amped', image: '849.png'},
+    {id: '849F', name: 'Toxtricity-Low Key', image: '849F.png'},
+    {id: '849G', name: 'Gmax Toxtricity', image: '849G.png'},
+    {id: '850', name: 'Sizzlipede', image: '850.png'},
+    {id: '851', name: 'Centiskorch', image: '851.png'},
+    {id: '851G', name: 'Gmax Centiskorch', image: '851G.png'},
+    {id: '852', name: 'Clobbopus', image: '852.png'},
+    {id: '853', name: 'Grapploct', image: '853.png'},
+    {id: '854', name: 'Sinistea', image: '854.png'},
+    {id: '855', name: 'Polteageist', image: '855.png'},
+    {id: '856', name: 'Hatenna', image: '856.png'},
+    {id: '857', name: 'Hattrem', image: '857.png'},
+    {id: '858', name: 'Hatterene', image: '858.png'},
+    {id: '858G', name: 'Gmax Hatterene', image: '858G.png'},
+    {id: '859', name: 'Impidimp', image: '859.png'},
+    {id: '860', name: 'Morgrem', image: '860.png'},
+    {id: '861', name: 'Grimmsnarl', image: '861.png'},
+    {id: '861G', name: 'Gmax Grimmsnarl', image: '861G.png'},
+    {id: '862', name: 'Obstagoon', image: '862.png'},
+    {id: '863', name: 'Perrserker', image: '863.png'},
+    {id: '864', name: 'Cursola', image: '864.png'},
+    {id: '865', name: 'Sirfetch\'d', image: '865.png'},
+    {id: '866', name: 'Mr Rime', image: '866.png'},
+    {id: '867', name: 'Runerigus', image: '867.png'},
+    {id: '868', name: 'Milcery', image: '868.png'},
+    {id: '869', name: 'Alcremie', image: '869.png'},
+    {id: '869G', name: 'Gmax Alcremie', image: '869G.png'},
+    {id: '870', name: 'Falinks', image: '870.png'},
+    {id: '871', name: 'Pincurchin', image: '871.png'},
+    {id: '872', name: 'Snom', image: '872.png'},
+    {id: '873', name: 'Frosmoth', image: '873.png'},
+    {id: '874', name: 'Stonjourner', image: '874.png'},
+    {id: '875', name: 'Eiscue', image: '875.png'},
+    {id: '876', name: 'Indeedee-Female', image: '876.png'},
+    {id: '876F', name: 'Indeedee-Male', image: '876F.png'},
+    {id: '877', name: 'Morpeko', image: '877.png'},
+    {id: '878', name: 'Cufant', image: '878.png'},
+    {id: '879', name: 'Copperajah', image: '879.png'},
+    {id: '879G', name: 'Gmax Copperajah', image: '879G.png'},
+    {id: '880', name: 'Dracozolt', image: '880.png'},
+    {id: '881', name: 'Arctozolt', image: '881.png'},
+    {id: '882', name: 'Dracovish', image: '882.png'},
+    {id: '883', name: 'Arctovish', image: '883.png'},
+    {id: '884', name: 'Duraludon', image: '884.png'},
+    {id: '884G', name: 'Gmax Duraludon', image: '884G.png'},
+    {id: '885', name: 'Dreepy', image: '885.png'},
+    {id: '886', name: 'Drakloak', image: '886.png'},
+    {id: '887', name: 'Dragapult', image: '887.png'},
+    {id: '888', name: 'Zacian', image: '888.png'},
+    {id: '888F', name: 'Zacian-Crowned', image: '888F.png'},
+    {id: '889', name: 'Zamazenta', image: '889.png'},
+    {id: '889F', name: 'Zamazenta-Crowned', image: '889F.png'},
+    {id: '890', name: 'Eternatus', image: '890.png'},
+    {id: '890G', name: 'Eternamax Aternatus', image: '890G.png'},
+    {id: '891', name: 'Kubfu', image: '891.png'},
+    {id: '892', name: 'Urshifu-Single', image: '892.png'},
+    {id: '892F', name: 'Urshifu-Rapid', image: '892F.png'},
+    {id: '892G', name: 'Gmax Urshifu-Single', image: '892G.png'},
+    {id: '892FG', name: 'Gmax Urshifu-Rapid', image: '892FG.png'},
+    {id: '893', name: 'Zarude', image: '893.png'},
+    {id: '894', name: 'Regieleki', image: '894.png'},
+    {id: '895', name: 'Regidrago', image: '895.png'},
+    {id: '896', name: 'Glastrier', image: '896.png'},
+    {id: '897', name: 'Spectrier', image: '897.png'},
+    {id: '898', name: 'Calyrex', image: '898.png'},
+    {id: '898F_I', name: 'Ice Rider Calyrex', image: '898F_I.png'},
+    {id: '898F_S', name: 'Shadow Rider Calyrex', image: '898F_S.png'},
+    {id: '899', name: 'Wyrdeer', image: '899.png'},
+    {id: '900', name: 'Kleavor', image: '900.png'},
+    {id: '901', name: 'Ursaluna', image: '901.png'},
+    {id: '902', name: 'Basculegion', image: '902.png'},
+    {id: '903', name: 'Sneasler', image: '903.png'},
+    {id: '904', name: 'Overqwil', image: '904.png'},
+    {id: '905', name: 'Enamorus', image: '905.png'},
+    {id: '905F', name: 'Enamorus-Therian', image: '905F.png'},
+    {id: '906', name: 'Sprigatito', image: '906.png'},
+    {id: '907', name: 'Floragato', image: '907.png'},
+    {id: '908', name: 'Meowscarada', image: '908.png'},
+    {id: '909', name: 'Fuecoco', image: '909.png'},
+    {id: '910', name: 'Crocalor', image: '910.png'},
+    {id: '911', name: 'Skeledirge', image: '911.png'},
+    {id: '912', name: 'Quaxly', image: '912.png'},
+    {id: '913', name: 'Quaxwell', image: '913.png'},
+    {id: '914', name: 'Quaquaval', image: '914.png'},
+    {id: '915', name: 'Lechonk', image: '915.png'},
+    {id: '916', name: 'Oinkologne-Male', image: '916.png'},
+    {id: '916F', name: 'Oinkologne-Female', image: '916F.png'},
+    {id: '917', name: 'Tarountula', image: '917.png'},
+    {id: '918', name: 'Spidops', image: '918.png'},
+    {id: '919', name: 'Nymble', image: '919.png'},
+    {id: '920', name: 'Lokix', image: '920.png'},
+    {id: '921', name: 'Pawmi', image: '921.png'},
+    {id: '922', name: 'Pawmo', image: '922.png'},
+    {id: '923', name: 'Pawmot', image: '923.png'},
+    {id: '924', name: 'Tandemaus', image: '924.png'},
+    {id: '925', name: 'Maushold', image: '925.png'},
+    {id: '926', name: 'Fidough', image: '926.png'},
+    {id: '927', name: 'Dachsbun', image: '927.png'},
+    {id: '928', name: 'Smoliv', image: '928.png'},
+    {id: '929', name: 'Dolliv', image: '929.png'},
+    {id: '930', name: 'Arboliva', image: '930.png'},
+    {id: '931', name: 'Squawkabilly', image: '931.png'},
+    {id: '932', name: 'Nacli', image: '932.png'},
+    {id: '933', name: 'Naclstack', image: '933.png'},
+    {id: '934', name: 'Garganacl', image: '934.png'},
+    {id: '935', name: 'Charcadet', image: '935.png'},
+    {id: '936', name: 'Armarouge', image: '936.png'},
+    {id: '937', name: 'Ceruledge', image: '937.png'},
+    {id: '938', name: 'Tadbulb', image: '938.png'},
+    {id: '939', name: 'Bellibolt', image: '939.png'},
+    {id: '940', name: 'Wattrel', image: '940.png'},
+    {id: '941', name: 'Kilowattrel', image: '941.png'},
+    {id: '942', name: 'Maschiff', image: '942.png'},
+    {id: '943', name: 'Mabosstiff', image: '943.png'},
+    {id: '944', name: 'Shroodle', image: '944.png'},
+    {id: '945', name: 'Grafaiai', image: '945.png'},
+    {id: '946', name: 'Bramblin', image: '946.png'},
+    {id: '947', name: 'Brambleghast', image: '947.png'},
+    {id: '948', name: 'Toedscool', image: '948.png'},
+    {id: '949', name: 'Toedscruel', image: '949.png'},
+    {id: '950', name: 'Klawf', image: '950.png'},
+    {id: '951', name: 'Capsakid', image: '951.png'},
+    {id: '952', name: 'Scovillain', image: '952.png'},
+    {id: '953', name: 'Rellor', image: '953.png'},
+    {id: '954', name: 'Rabsca', image: '954.png'},
+    {id: '955', name: 'Flittle', image: '955.png'},
+    {id: '956', name: 'Espathra', image: '956.png'},
+    {id: '957', name: 'Tinkatink', image: '957.png'},
+    {id: '958', name: 'Tinkatuff', image: '958.png'},
+    {id: '959', name: 'Tinkaton', image: '959.png'},
+    {id: '960', name: 'Wiglett', image: '960.png'},
+    {id: '961', name: 'Wugtrio', image: '961.png'},
+    {id: '962', name: 'Bombirdier', image: '962.png'},
+    {id: '963', name: 'Finizen', image: '963.png'},
+    {id: '964', name: 'Palafin-Zero', image: '964.png'},
+    {id: '964F', name: 'Palafin-Hero', image: '964F.png'},
+    {id: '965', name: 'Varoom', image: '965.png'},
+    {id: '966', name: 'Revavroom', image: '966.png'},
+    {id: '967', name: 'Cyclizar', image: '967.png'},
+    {id: '968', name: 'Orthworm', image: '968.png'},
+    {id: '969', name: 'Glimmet', image: '969.png'},
+    {id: '970', name: 'Glimmora', image: '970.png'},
+    {id: '971', name: 'Greavard', image: '971.png'},
+    {id: '972', name: 'Houndstone', image: '972.png'},
+    {id: '973', name: 'Flamigo', image: '973.png'},
+    {id: '974', name: 'Cetoddle', image: '974.png'},
+    {id: '975', name: 'Cetitan', image: '975.png'},
+    {id: '976', name: 'Veluza', image: '976.png'},
+    {id: '977', name: 'Dondozo', image: '977.png'},
+    {id: '978', name: 'Tatsugiri-Curly', image: '978.png'},
+    {id: '978F_D', name: 'Tatsugiri-Droopy', image: '978F_D.png'},
+    {id: '978F_S', name: 'Tatsugiri-Stretchy', image: '978F_S.png'},
+    {id: '979', name: 'Annihilape', image: '979.png'},
+    {id: '980', name: 'Clodsire', image: '980.png'},
+    {id: '981', name: 'Farigiraf', image: '981.png'},
+    {id: '982', name: 'Dudunsparce', image: '982.png'},
+    {id: '983', name: 'Kingambit', image: '983.png'},
+    {id: '984', name: 'Great Tusk', image: '984.png'},
+    {id: '985', name: 'Scream Tail', image: '985.png'},
+    {id: '986', name: 'Brute Bonnet', image: '986.png'},
+    {id: '987', name: 'Flutter Mane', image: '987.png'},
+    {id: '988', name: 'Slither Wing', image: '988.png'},
+    {id: '989', name: 'Sandy Shocks', image: '989.png'},
+    {id: '990', name: 'Iron Treads', image: '990.png'},
+    {id: '991', name: 'Iron Bundle', image: '991.png'},
+    {id: '992', name: 'Iron Hands', image: '992.png'},
+    {id: '993', name: 'Iron Jugulis', image: '993.png'},
+    {id: '994', name: 'Iron Moth', image: '994.png'},
+    {id: '995', name: 'Iron Thorns', image: '995.png'},
+    {id: '996', name: 'Frigibax', image: '996.png'},
+    {id: '997', name: 'Arctibax', image: '997.png'},
+    {id: '998', name: 'Baxcalibur', image: '998.png'},
+    {id: '999', name: 'Gimmighoul', image: '999.png'},
+    {id: '999F', name: 'Gimmighoul-Roaming', image: '999F.png'},
+    {id: '1000', name: 'Gholdengo', image: '1000.png'},
+    {id: '1001', name: 'Wo-Chien', image: '1001.png'},
+    {id: '1002', name: 'Chien-Pao', image: '1002.png'},
+    {id: '1003', name: 'Ting-Lu', image: '1003.png'},
+    {id: '1004', name: 'Chi-Yu', image: '1004.png'},
+    {id: '1005', name: 'Roaring Moon', image: '1005.png'},
+    {id: '1006', name: 'Iron Valiant', image: '1006.png'},
+    {id: '1007', name: 'Koraidon', image: '1007.png'},
+    {id: '1008', name: 'Miraidon', image: '1008.png'}
+};
+
+var lists = {
+    types: ["normal", "fire", "water", "electric", "grass", "ice", "fighting", "poison", "ground", "flying", "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy"],
+    generations: [1, 2, 3, 4, 5, 6, 7, 8, 8.5, 9],
+    includeForms: ["regional", "alternate", "mega", "gigantamax", "battle", "gender", "aesthetic"],
+    minorFormTypes: ["alternate", "battle", "gender", "aesthetic"]
+};
+
+var defaultSettings = {
+    shiny: false,
+    includeForms: [],
+    majorOnly: false,
+    finalOnly: false,
+    spoilers: true,
+    generations: lists.generations,
+    types: lists.types,
+    maxBatchSize: 20
+};
+
+var pokemonPicker = new picker.Picker({
+    defaultSettings: defaultSettings,
+    localStorageKey: 'favorites',
+    favoritesQueryParam: 'favs',
+    shortcodeLength: 2,
+    modifyState: function(state) {
+        var legacyReplacements = {
+            '306f': '306mega',
+            '71810-percent': '718tenpercent',
+            '890gigantamax': '890eternamax'
+        };
+
+        if (state.found_favorites) {
+            state.favorites = state.found_favorites;
+            delete state.found_favorites;
+        }
+
+        var survived = state.survived;
+        var eliminated = state.eliminated;
+        var evaluating = state.evaluating;
+        var current = state.current;
+        var favorites = state.favorites;
+        var arrays = [favorites, survived, eliminated, current, evaluating];
+
+        var identifier;
+        var i, j;
+
+        if (!state.settings) {
+            // Backwards-compatibility: old states since before settings became a sub-object
+            state.settings = {
+                shiny: state.shiny,
+                includeForms: state.include_forms ? lists.includeForms : [],
+                spoilers: state.spoilers,
+                finalOnly: state.final_only,
+                // We want major only checked by default for users who weren't including forms before, so as to make it the default in forms mode
+                majorOnly: state.major_only === undefined && !state.include_forms ? true : state.major_only || true,
+                // Default to all generations/types checked.
+                generations: state.generations || lists.generations,
+                types: state.types || lists.types,
+                maxBatchSize: state.max_batch_size || defaultSettings.maxBatchSize
+            };
+        } else {
+            // Backwards-compatibility: ensure we have the camelCase settings (and no extra settings)
+            state.settings = {
+                shiny: state.settings.shiny,
+                includeForms: state.settings.includeForms || (state.settings.include_forms ? lists.includeForms : []),
+                spoilers: state.settings.spoilers,
+                finalOnly: state.settings.finalOnly || state.settings.final_only,
+                majorOnly: state.settings.majorOnly || state.settings.major_only,
+                generations: state.settings.generations,
+                types: state.settings.types,
+                maxBatchSize: state.settings.maxBatchSize || state.settings.max_batch_size
+            };
+        }
+
+        if (typeof state.settings.includeForms !== 'object') {
+            state.settings.includeForms = state.settings.includeForms ? lists.includeForms : [];
+        }
+
+        // Go through all the Pokémon in each array and correct legacy data format
+        for (i = 0; i < arrays.length; i++) {
+            for (j = arrays[i].length - 1; j >= 0; j--) {
+                if (arrays[i][j].number) {
+                    // Old-style data; convert to the new style
+                    if (arrays[i] === eliminated) {
+                        arrays[i][j] = {id: getPokemonIdentifier(arrays[i][j]), eliminatedBy: arrays[i][j].eliminated_by};
+                    }
+                    else {
+                        arrays[i][j] = getPokemonIdentifier(arrays[i][j]);
+                    }
+                }
+                if (arrays[i][j].mon) {
+                    // Switch to the generic format
+                    arrays[i][j].id = arrays[i][j].mon;
+                    delete arrays[i][j].mon;
+                }
+                if (arrays[i] === eliminated && arrays[i][j].eliminated_by) {
+                    // Switch to camelCase eliminatedBy
+                    arrays[i][j].eliminatedBy = arrays[i][j].eliminated_by;
+                    delete arrays[i][j].eliminated_by;
+                }
+                if (arrays[i][j].id in legacyReplacements) {
+                    arrays[i][j].id = legacyReplacements[arrays[i][j].identifier];
+                } else if (arrays[i][j] in legacyReplacements) {
+                    arrays[i][j] = legacyReplacements[arrays[i][j]];
+                }
+            }
+        }
+        // Make legacy replacements in eliminatedBy arrays
+        // We go through both arrays backwards so that splicing the indices
+        // won't mess up subsequent indices
+        for (i = eliminated.length - 1; i >= 0; i--) {
+            for (j = eliminated[i].eliminatedBy.length - 1; j >= 0; j--) {
+                if (eliminated[i].eliminatedBy[j] in legacyReplacements) {
+                    eliminated[i].eliminatedBy[j] = legacyReplacements[eliminated[i].eliminatedBy[j]];
+                }
+            }
+        }
+        return state;
+    },
+    settingsFromFavorites: function(favorites) {
+        var settings = {
+            includeForms: [],
+            majorOnly: true,
+            spoilers: false
+        };
+        var i, j;
+        var formTypes;
+        var formType;
+
+        for (i = 0; i < favorites.length; i++) {
+            // Activate forms mode if the Pokémon has a form...
+            if (favorites[i].form) {
+                formTypes = favorites[i].formType.split(",");
+                for (j = 0; j < formTypes.length; j++) {
+                    formType = formTypes[j].split("-");
+                    if (settings.includeForms.indexOf(formType[0]) === -1) {
+                        settings.includeForms.push(formType[0]);
+                    }
+                    // Disable major only if this is a minor form.
+                    if (formType[1] === 'minor') {
+                        settings.majorOnly = false;
+                    }
+                }
+            }
+            // Enable spoilers if the Pokémon is a spoiler.
+            if (favorites[i].spoiler) {
+                settings.spoilers = true;
+            }
+        }
+        return settings;
+    },
+    shouldIncludeItem: function(item, settings) {
+        var key;
+        for (key in settings) {
+            if (settings.hasOwnProperty(key)) {
+                if (!settingIncludesPokemon(item, key, settings)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    },
+    onLoadState: function(missingItems, extraItems) {
+        var addedSpoilers = false;
+        var i;
+
+        var settings = this.getSettings();
+
+        if (missingItems.length && settings.spoilers) {
+            for (i = 0; i < missingItems.length; i++) {
+                if (this.itemMap[missingItems[i]].spoiler) {
+                    // We've added a spoiler
+                    addedSpoilers = true;
+                }
+            }
+            if (addedSpoilers && !confirm("Some Pokémon marked as spoilers have been added since last time you were here. Press OK to proceed with these Pokémon added. Press Cancel to turn off spoilers so that you won't see these Pokémon.")) {
+                settings.spoilers = false;
+                this.setSettings(settings);
+            }
+        }
+        $(function() {
+            var $welcome = $('<p class="info">Welcome back! Your previous state has been loaded. If you would like to start from scratch, please click this button: </p>').append(pickerUI.makeResetButton());
+            $("h1").next(".info").remove();
+            $("h1").after($welcome);
+        });
+    }
+});
+
+var pickerUI = new PickerUI(pokemonPicker, {
+    elements: {
+        settings: {
+            shiny: "#shiny",
+            includeForms: ".include-forms",
+            finalOnly: "#final",
+            majorOnly: "#major",
+            generations: ".generations",
+            types: ".types",
+            spoilers: "#spoilers",
+            maxBatchSize: "#max-batch-size"
+        },
+        pick: "#pick",
+        pass: "#pass",
+        undo: "#undo",
+        redo: "#redo",
+        reset: ".reset",
+        evaluating: "#pokemon",
+        favorites: "#favorites",
+        sharedList: "#shared-list",
+        sharedListContainer: "#shared-list-modal",
+        sharedListContinue: "#shared-list-continue",
+        sharedListSkip: ".shared-list-skip"
+    },
+    messages: {
+        mustSelect: "You must select some Pokémon first! If you like them all the same, press Pass.",
+        orderedAll: 'You have ordered every available Pokémon!',
+        noItems: 'There are no Pokémon that fit your criteria! Set some different options and try again.'
+    },
+    onUpdate: function(updateType) {
+        var totalPokemon = this.picker.state.items.length;
+        var current = this.picker.state.arrays.current.length;
+        var favorites = this.picker.state.arrays.favorites.length;
+        var eliminated = this.picker.state.arrays.eliminated.length;
+        var evaluating = this.picker.state.arrays.evaluating.length;
+        var remaining = Math.max(0, totalPokemon - favorites - eliminated - 1);
+
+        setPickerWidth();
+
+        $("#major").prop("disabled", !hasMinorForms(this.picker.state.settings.includeForms));
+
+        $("#remaining").text(remaining);
+
+        updateProgressBar((1 - (remaining / this.picker.state.roundSize)) * 100, updateType);
+
+        $("#found-favorites").find("p.state-info").remove();
+
+        if (favorites === 0) {
+            $("#found-favorites").prepend('<p class="state-info">None yet! Your favorites will start appearing here when you\'ve narrowed things down.</p>');
+        } else {
+            $("#dispute").after('<p class="state-info"><a href="/favorite-list' + this.picker.getShortcodeLink() + (this.picker.state.settings.shiny ? '&shiny=1' : '') + '">Shareable link to your current favorites list.</a> Note that that page won\'t automatically update as you go; you\'ll have to share a new link when you\'ve found more favorites.</p>');
+        }
+
+        $("#debug-state").val(JSON ? JSON.stringify(this.picker.state.getState()) : "Your browser does not support native JSON serialization! Unfortunately, at the moment you cannot use the import/export feature.");
+    },
+    wrapItem: function(item) {
+        return $('<li></li>').append($('<span></span>').append(item));
+    },
+    getItemImageUrl: function(pokemon, settings) {
+        return "/sprites/gen9/unified/" + (settings.shiny ? "shiny/" : "") + zeropad(pokemon.number) + (pokemon.form ? "-" + pokemon.form : "") + ".png";
+    }
+});
+
+$.getJSON("/static/favorite-pokemon.json?v=sv4", function(json) {
+    pokemonPicker.options.items = json.items;
+    pokemonPicker.initialize();
+
+    pickerUI.initialize();
+
+    pickerUI.elem.settings.includeForms.on('change', function() {
+        var includeForms = pickerUI.getSetting('includeForms');
+        pickerUI.elem.settings.majorOnly.prop("disabled", !hasMinorForms(includeForms));
+
+        setSelectAll('includeForms');
+    });
+
+    pickerUI.elem.settings.types.on('change', function() {
+        setSelectAll('types');
+    });
+
+    pickerUI.elem.settings.generations.on('change', function() {
+        setSelectAll('generations');
+    });
+
+    setSelectAll('includeForms');
+    setSelectAll('types');
+    setSelectAll('generations');
+});
+
+/* SORTABLE FAVORITES */
+
+var sortable = new Sortable(pickerUI.elem.favorites.get(0), {
+    draggable: '.item',
+    animation: 100,
+    onStart: function() {
+        pickerUI.elem.favorites.addClass("sorting");
+    },
+    onEnd: function() {
+        pickerUI.elem.favorites.removeClass("sorting");
+    },
+    onUpdate: function() {
+        pokemonPicker.setFavorites(pickerUI.elem.favorites.children().map(function() {
+            return pickerUI.getItem(this);
+        }).get());
+        pickerUI.update(true, 'sort');
+    }
+});
+
+/* DISPUTE */
+
+function dispute(missing) {
+    /**
+     * Locates the Pokémon whose name is given by missing (if it exists)
+     * and explains to the user where it is in the picker state.
+     */
+    var identifier = identifierFromName(missing);
+    var missingPokemon;
+    var i;
+    var eliminated, eliminator, joinedEliminators;
+    var eliminators = [];
+    var settings = pokemonPicker.getSettings();
+
+    if (!identifier) {
+        alert("'" + missing + "' does not seem to be a Pokémon recognized by the picker. Note that the 'default' form (the one used in non-forms mode) is just the name of its species, so that there is for example no Unown A, just Unown. Otherwise, check your spelling (note that the Nidorans are \"Nidoran (m)\" and \"Nidoran (f)\").");
+        return;
+    }
+    missingPokemon = pokemonPicker.itemMap[identifier];
+    if (pokemonPicker.state.items.indexOf(identifier) === -1) {
+        if (!settingIncludesPokemon(missingPokemon, 'includeForms', settings)) {
+            alert(missingPokemon.name + "'s form is listed as '" + missingPokemon.formType + "'. To appear as a distinct Pokémon, you must enable the appropriate form types by checking the respective boxes under the Options tab. If this form designation seems odd in a more than debatable way, I may have made a mistake classifying it; contact me at antialiasis@gmail.com.");
+        }
+        else if (!settingIncludesPokemon(missingPokemon, 'finalOnly', settings)) {
+            alert(missingPokemon.name + " is a non-final evolution, and you have checked \"Final evolutions only\". If you are confident this Pokémon does not evolve into anything in the generations you selected, I may have made a mistake classifying it; contact me at antialiasis@gmail.com.");
+        }
+        else if (!settingIncludesPokemon(missingPokemon, 'generations', settings)) {
+            alert(missingPokemon.name + " is from Gen " + missingPokemon.gen + ", and you have excluded that generation. Keep in mind that Mega Evolutions are considered Gen 6, but gender dimorphisms are classified with the generation in which the Pokémon itself was introduced. If I have made a mistake classifying something, please contact me at antialiasis@gmail.com.");
+        }
+        else if (!settingIncludesPokemon(missingPokemon, 'types', settings)) {
+            alert("You have filtered by type, and " + missingPokemon.name + " does not have any of the types you selected. You must select " + prettyJoin(missingPokemon.types.map(capitalize), 'or') + " under \"Types included\" to include this Pokémon.");
+        }
+        else if (!settingIncludesPokemon(missingPokemon, 'spoilers', settings)) {
+            alert(missingPokemon.name + " is considered a spoiler. To include this Pokémon, check \"Include spoilers\" in the Options tab.");
+        }
+        else {
+            alert("Hmm, " + missingPokemon.name + " is not in the filtered list of Pokémon but none of the possible reasons why seem to match. I've done something wrong here. Let me know at antialiasis@gmail.com, include an export of your state (accessible in the bottom right of the Found Favorites tab), and I'll try to figure it out.");
+        }
+        return;
+    }
+
+    eliminated = pokemonPicker.state.findInArray(identifier, 'eliminated');
+
+    if (eliminated) {
+        // The Pokémon was eliminated
+        for (i = 0; i < eliminated.eliminatedBy.length; i++) {
+            eliminator = pokemonPicker.itemMap[eliminated.eliminatedBy[i] + ""];
+            eliminators.push(eliminator.name);
+        }
+        if (eliminators.length === 0) {
+            alert("Hmm, something seems to have gone wrong somewhere. This Pokémon has been eliminated, but not by any Pokémon, which should not happen. Please let me know at antialiasis@gmail.com and include an export of your state (accessible in the bottom right of the Found Favorites tab).");
+        }
+        else {
+            joinedEliminators = prettyJoin(eliminators);
+            alert(missingPokemon.name + " has been marked as eliminated by " + joinedEliminators + ". That means that when it last appeared, you picked " + joinedEliminators + " (and possibly other Pokémon already in your Found Favorites) over it. You will see " + missingPokemon.name + " again when " + joinedEliminators + (eliminators.length === 1 ? " is" : " are") + " under your Found Favorites.");
+        }
+    }
+    else if (pokemonPicker.state.findInArray(identifier, 'survived')) {
+        alert("You've already picked " + missingPokemon.name + " this round. It will be returning in the next.");
+    }
+    else if (pokemonPicker.state.findInArray(identifier, 'current')) {
+        alert(missingPokemon.name + " has yet to appear this round. Don't worry, it's going to.");
+    }
+    else if (pokemonPicker.state.findInArray(identifier, 'favorites')) {
+        alert("What are you talking about? " + missingPokemon.name + " is already in your Found Favorites.");
+    }
+    else if (pokemonPicker.state.findInArray(identifier, 'evaluating')) {
+        alert(missingPokemon.name + " is right there, in the batch you're evaluating right now.");
+    }
+    else {
+        // The Pokémon really isn't in any of our arrays
+        alert("Huh, " + missingPokemon.name + " really doesn't actually seem to be anywhere in here. There seems to be an actual bug! Please let me know at antialiasis@gmail.com and include an export of your state (accessible in the bottom right of the Found Favorites tab).");
+    }
+}
+
+
+/* PROGRESS BAR */
+
+function updateProgressBar(value, updateType) {
+    var $progressBar = $("#progress-bar span");
+    var $favorite;
+
+    if (['pick', 'undo', 'redo'].indexOf(updateType) !== -1) {
+        if (!value && updateType !== 'undo') {
+            // We just found a favorite!
+            $favorite = pickerUI.elem.favorites.children('li').last().addClass("no-animate hidden");
+            $progressBar.animate({ width: '100%' }, 400, function() {
+                $progressBar.parent().css({ transform: 'scale(1.1)'});
+                setTimeout(function() {
+                    $progressBar.parent().css({ transform: 'scale(1)'});
+                    $progressBar.width(0);
+                    $favorite.removeClass("no-animate hidden");
+                }, 200);
+            });
+        } else {
+            if (!$progressBar.width() && updateType === 'undo') {
+                $progressBar.width("100%")
+            }
+            $progressBar.animate({ width: value + '%' }, 400);
+        }
+    } else {
+        $progressBar.width(value + '%');
+    }
+}
+
+
+/* ADDITIONAL PICKER EVENT HANDLERS */
+
+function setSelectAll(setting) {
+    var value = pickerUI.getSetting(setting);
+    var $selectAll = $('.select-all[value="' + setting + '"]');
+    if (value.length === lists[setting].length) {
+        $selectAll.prop("checked", true);
+    } else {
+        $selectAll.prop("checked", false);
+    }
+}
+
+$(".select-all").on('change', function() {
+    var setting = $(this).val();
+    pickerUI.setSetting(setting, $(this).prop("checked") ? lists[setting] : []);
+    pokemonPicker.setSettings(pickerUI.getSettings());
+    pickerUI.update(true, 'setting');
+});
+
+$("#dispute").children('a').on('click', function() {
+    var missing = prompt("Enter the name of a Pokémon to check where it is in the picker's internal lists.");
+    if (missing) {
+        dispute(missing);
+    }
+    return false;
+});
+
+$("#import").on('click', function() {
+    var state;
+
+    try {
+        state = JSON.parse($("#debug-state").val().trim());
+    } catch (e) {
+        $("#debug-state").val("Invalid import state.")
+        return false;
+    }
+
+    if (!pokemonPicker.setState(state)) {
+        $("#debug-state").val("Invalid import state.")
+    }
+
+    pickerUI.update(false, 'import')
+    return false;
+});
+
+
+$(window).on('resize', setPickerWidth);
+
+
+/* NON-PICKER EVENT HANDLERS */
+
+$(".toggle").on('click', function() {
+    $($(this).attr("href")).slideToggle();
+    return false;
+});
+
+$(".tabs").each(function() {
+    var $tabs = $(this);
+    $tabs.find("a:not(#expand-favorites a)").on('click', function() {
+        $($tabs.children(".active").removeClass("active").children("a").attr("href")).hide();
+        $(this).parent().addClass("active");
+        $($(this).attr("href")).show();
+        return false;
+    }).each(function () {
+        $($(this).attr("href")).hide();
+    }).first().click();
+});
+
+$("#expand-favorites a").on('click', function() {
+    $(this).html($("#secondary").hasClass("expanded") ? "&lsaquo;" : "&rsaquo;");
+    $(this).attr("title", $("#secondary").hasClass("expanded") ? "Expand list" : "Show picker");
+    $("#picking").toggleClass("collapsed");
+    $("#secondary").toggleClass("expanded");
+    return false;
+});
+
+$("#darkmode").on('click', function() {
+    if (getActiveStyleSheet() === 'dark') {
+        setActiveStyleSheet(null);
+        $(this).text("Dark mode");
+    } else {
+        setActiveStyleSheet('dark');
+        $(this).text("Light mode");
+    }
+    return false;
+});
+
+if (getActiveStyleSheet() === 'dark') {
+    $("#darkmode").text("Light mode");
+}
+
+
+/* UTILITY FUNCTIONS */
+
+function setPickerWidth() {
+    var evaluating = pokemonPicker.state.arrays.evaluating;
+    pickerUI.elem.evaluating.width(evaluating.length ? getBatchWidth(evaluating.length, 5) * (pickerUI.elem.evaluating.children().width() + 6) : '100%');
+}
+
+function settingIncludesPokemon(pokemon, setting, settings) {
+    /**
+     * Returns false if the Pokémon should be filtered out by the given
+     * setting, or true otherwise.
+     */
+    var value = settings[setting];
+    switch (setting) {
+        case 'includeForms':
+            return !pokemon.form || isFormIncluded(pokemon, value, settings.majorOnly);
+        case 'generations':
+            return value.indexOf(pokemon.gen) !== -1;
+        case 'types':
+            return hasType(pokemon, value);
+        case 'finalOnly':
+            return !value || finalInGeneration(pokemon, settings.generations);
+        case 'spoilers':
+            return value || !pokemon.spoiler;
+        default:
+            return true;
+    }
+}
+
+function getBatchWidth(batchSize, maxWidth) {
+    /**
+     * Calculate how many sprites wide the display area for the Pokémon
+     * should be, for the given batch size.
+     * We want the closest thing possible to a square, but prefer perfect
+     * rectangles to imperfect squares.
+     */
+    // First, factor the batch size.
+    var root = Math.sqrt(batchSize);
+    var i, factor = 1;
+    for (i = 2; i <= root; i++) {
+        // The highest number up to i that batchSize is divisible by is factor.
+        if (batchSize % i === 0) {
+            factor = i;
+        }
+    }
+    // If this would lead to the width being more than three times greater than the height, use the same batch width as the number above.
+    if (3 * factor < batchSize / factor) {
+        return getBatchWidth(batchSize + 1, maxWidth);
+    }
+    else {
+        return Math.min(5, batchSize / factor);
+    }
+}
+
+function prettyJoin(array, word) {
+    /**
+     * Joins the array items together in a human way: "a, b and c"
+     *
+     * word can optionally be set to use a different word than 'and' for
+     * the final item.
+     */
+    if (!word) word = ' and ';
+    if (array.length === 1) {
+        return array[0];
+    }
+    else {
+        return array.slice(0, array.length - 1).join(', ') + word + array[array.length - 1];
+    }
+}
+
+function capitalize(word) {
+    /**
+     * Capitalizes the first letter of the word.
+     */
+    return word.substring(0, 1).toUpperCase() + word.substring(1);
+}
+
+function zeropad(number) {
+    /**
+     * Pads a number with zeroes up to three digits.
+     */
+    var num = number.toString();
+    while (num.length < 3) {
+        num = "0" + num;
+    }
+    return num;
+}
+
+function getPokemonIdentifier(pokemon) {
+    /**
+     * Returns the identifier of the given Pokémon.
+     */
+    return pokemon.id || pokemon.identifier || pokemon.number + (pokemon.form || '');
+}
+
+function identifierFromName(name) {
+    /**
+     * Returns the identifier of the Pokémon whose name is given
+     * (case-insensitive).
+     */
+    return pokemonPicker.forEachItem(function(identifier) {
+        if (pokemonPicker.itemMap[identifier].name.toLowerCase() === name.toLowerCase()) {
+            return identifier;
+        }
+        else {
+            return false;
+        }
+    });
+}
+
+function hasType(pokemon, types) {
+    /**
+     * Returns true if the given Pokémon object has at least one of the
+     * given types.
+     */
+    for (var i = 0; i < pokemon.types.length; i++) {
+        if (types.indexOf(pokemon.types[i]) !== -1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function finalInGeneration(pokemon, generations) {
+    /**
+     * Returns true if the given Pokémon object is a final evolution in
+     * the given generation.
+     */
+    return pokemon.finalEvolution === true || pokemon.finalEvolution && generations.indexOf(pokemon.finalEvolution) === -1;
+}
+
+function isFormIncluded(pokemon, includeForms, majorOnly) {
+    /**
+     * Returns true if the given Pokémon object should be included by
+     * the given form settings.
+     */
+    if (!pokemon.form) {
+        return true;
+    }
+    var formTypes = pokemon.formType.split(",");
+    var formType;
+    var i;
+    for (var i = 0; i < formTypes.length; i++) {
+        formType = formTypes[i].split("-");
+        if (majorOnly && formType[1] === 'minor') {
+            return false;
+        }
+        if (includeForms.indexOf(formType[0]) === -1) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function hasMinorForms(forms) {
+    /**
+     * Returns true if any of the given forms can be minor.
+     */
+    for (var i = 0; i < lists.minorFormTypes.length; i++) {
+        if (forms.indexOf(lists.minorFormTypes[i]) !== -1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/* CONSOLE TESTS */
+
+function createShortcode(num) {
+    var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    return alphabet[Math.floor(num / 64)] + alphabet[num % 64];
+}
+
+function testShortcodes() {
+    var firstForm = null;
+    for (var i = 0; i < items.length; i++) {
+        if (firstForm === null && items[i].form) {
+            firstForm = i;
+        }
+        var expectedShortcode = createShortcode(firstForm !== null ? i - firstForm + 2500 : i);
+        if (expectedShortcode !== items[i].shortcode) {
+            console.log('Unexpected shortcode! Expected:', expectedShortcode, items[i]);
+        }
+    }
+}
+
+function testFormTypes() {
+    var formTypes;
+    var formTypeMap = {};
+    var i, j;
+    for (i = 0; i < items.length; i++) {
+        if (!items[i].form) {
+            continue;
+        }
+        formTypes = items[i].formType.split(",");
+        for (j = 0; j < formTypes.length; j++) {
+            formTypeMap[formTypes[j]] = true;
+        }
+    }
+
+    console.log(Object.keys(formTypeMap).sort());
+}
+</script>
+</body>
+</html>

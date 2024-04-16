@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="shortcut icon" href="https://static.wikia.nocookie.net/leagueoflegends/images/7/7b/Jinx_OriginalCircle.png/revision/latest/scale-to-width-down/32?cb=20171112100624">
+<meta name="viewport" content="initial-scale=1.0">
+<title>Favourite League of Legends Character Picker</title>
+<style>
+<title>linear-gradient function</title>
+    .linear-gradient {
+        background-image: linear-gradient(to bottom, #000, #000);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+    }
+ 
+    h2 {
+        text-align: center;
+    }
+body,
+  html {
+    height: 100%;
+    margin: 0;
+  }
+  .bg {
+    background-image: url("background.png");
+    height: 150%;
+    background-position: top;
+    background-repeat: no-repeat;
+    background-size: cover;
+    color:#FFF;
+    font-family:Tahoma,Helvetica,Arial,sans-serif;
+    font-size:10pt;
+    margin:0;
+    padding:10px;
+}
+
+a:link, a:visited {
+    color:#008;
+    font-weight:bold;
+    text-decoration:none;
+}
+
+a:active, a:hover {
+    color:#ACF;
+}
+
+.info {
+    font-weight:bold;
+}
+
+button {
+    font-family:inherit;
+    cursor:pointer;
+    border:0;
+    border-radius:3px;
+    padding:0.3em 0.5em;
+    background:#DBC174;
+    color:#000;
+}
+
+button:hover {
+    background:#D38D50;
+}
+
+button.disabled {
+    background:#565452;
+    color:#000;
+    cursor:not-allowed;
+}
+
+button.disabled:hover {
+    background:#D38D50;
+}
+
+#container {
+    position:relative;
+    margin-left:-10px;
+    margin-right:-10px;
+    padding:10px;
+    overflow:hidden;
+}
+
+@media (min-width:1024px) {
+    /* Put the found favorites beside the picking div when the window is sufficiently large */
+    #picking {
+        float:left;
+        width:636px;
+    }
+
+    #secondary {
+        margin-left:646px;
+    }
+    
+    #secondary, #picking {
+        transition:margin-left 0.4s;
+    }
+
+    #picking.collapsed {
+        margin-left:-100%;
+        z-index:-1;
+    }
+
+    #secondary.expanded {
+        margin-left:0;
+    }
+
+    #expand-favorites {
+        display:inline-block;
+    }
+
+    .tabs {
+        padding-left:0;
+    }
+}
+
+@media (min-width:1300px) {
+    /* Once we get to the point where 636px is less than half of the width of the screen, make the picking div just take up half */
+    #picking {
+        width:60%;
+    }
+
+    #secondary {
+        margin-left:61%;
+    }
+}
+
+#pick {
+    background:#FC3;
+    color:#000;
+    font-size:larger;
+    font-weight:bold;
+    width:6em;
+    border-radius:5px;
+    margin-right:10px;
+}
+
+#pick.disabled {
+    background:#D38D50;
+}
+
+#pick:hover {
+    background:#D38D50;
+}
+
+.item-list {
+    padding:0;
+    list-style-type:none;
+    line-height:17%;
+}
+
+.item-list li {
+    margin:0;
+    display:inline-block;
+    height:17%;
+    width:17%;
+    line-height:17%;
+    border:3px solid transparent;
+    text-align:center;
+    position:relative;
+    vertical-align:top;
+    overflow:hidden;
+    border-radius:100%;
+    background-color:rgba(219, 193, 116, .7);
+    color:#FFF;
+}
+
+.item-list li img {
+    vertical-align:middle;
+    max-height:100%;
+    max-width:100%;
+}
+
+.item-list li span {
+    display:inline-block;
+    vertical-align:middle;
+    line-height:1.2;
+}
+
+@media (max-width:100%) {
+    .item-list {
+        line-height:17%;
+    }
+
+    .item-list li {
+        height:17%;
+        width:17%;
+    }
+
+    .item-list li span {
+        height:17%;
+        width:17%;
+        padding:3px;
+    }
+
+    .item-list li img {
+        top:0px;
+        left:0px;
+        max-height:100%;
+        max-width:100%;
+    }
+}
+
+@media (max-width:100%) {
+    .item-list {
+        line-height:17%;
+    }
+
+    .item-list li {
+        height:17%;
+        width:17%;
+    }
+
+    .item-list li span {
+        height:17%;
+        width:17%;
+        padding:3px;
+    }
+
+    .item-list li img {
+        top:0px;
+        left:0px;
+        max-height:100%;
+        max-width:100%;
+    }
+}
+#evaluating li {
+    cursor:pointer;
+}
+
+#favorites li {
+    cursor:move;
+}
+
+.item-list li:hover {
+    background-color:rgba(255, 250, 229, .7);
+}
+
+.item-list.sorting li:hover {
+    background-color:rgba(96, 96, 96, .7);
+}
+
+#evaluating li.selected {
+    border:3px solid #FC3;
+}
+
+#evaluating, #buttons {
+    text-align:center;
+    margin:auto;
+}
+
+#evaluating li.notice {
+    width:auto;
+    height:auto;
+    max-width:20%;
+    margin:auto;
+    background:#565452;
+    border-radius:10px;
+    padding:10px 10px;
+    color:#FFF;
+    text-align:center;
+    line-height:1.4;
+    cursor:auto;
+    font-size:10pt;
+}
+
+#buttons {
+    margin-top:30px;
+    position:relative;
+    z-index:3;
+}
+
+#max-batch-size {
+    width:50%;
+}
+
+.picker-info {
+    text-align:center;
+    font-size:smaller;
+}
+
+#progress-bar {
+    display:block;
+    margin:auto;
+    height:15px;
+    width:150px;
+    margin-top:5px;
+    background:#CDF;
+    vertical-align:middle;
+    transition: transform .2s ease-out;
+}
+
+#progress-bar span {
+    display:block;
+    height:100%;
+    width:0;
+    background:#58F;
+}
+
+.help-text {
+    display:block;
+    font-size:smaller;
+}
+</style>
+</head>
+<body>
+<div class="bg">
+<h1 class="linear-gradient" style="color: #DBC174; text-align: center; border-radius: 10px; padding: 10px; background: #000;"><span style="font-weight:85w">FAVOURITE <img src='https://static.wikia.nocookie.net/leagueoflegends/images/5/56/League_of_Legends_Update_Logo_Concept_03.jpg/revision/latest/scale-to-width-down/1000?cb=20191029062636' height='30'> CHARACTER PICKER</span></h1>
+
+<p style='border-radius: 10px; padding: 5px; background: #000;'>For each group of characters presented to you, click one or more of your favorites from that group and press the "Pick" button. Double-clicking a character will count as only picking that character from the group presented. Eventually, your favorite characters will start appearing under "Found Favorites". You can continue as long as you like to construct an arbitrarily long list of your favorite characters.<br />
+<br />
+In principle, the result will be perfectly accurate, provided you pick consistently - you'll correctly get your second favorite second, even if it's pitted against your absolute favorite early on, for instance. You can reorder your favorites after they've been added onto the list by dragging the circles into the desired order.<br />
+<br />
+Various filtering and presentation options for the picker can be found in the "Options" tab under "Found Favorites" below.</p>
+
+<div id="container">
+
+<div id="picking">
+<ul id="evaluating" class="item-list" style="opacity: 1; width: 750px;">
+</ul>
+
+<p id="buttons"><button id="pick">Pick</button> <button id="pass">Pass</button> <button id="undo">Undo</button> <button id="redo">Redo</button></p>
+</div>
+
+<div id="secondary">
+<h2 class="linear-gradient" style="border-radius: 10px; padding: 10px; background: #000;">Found Favorites</h2>
+<ol id="favorites" class="item-list">
+</div>
+</p>
+<br />
+<hr />
+<div id="secondary" style="border-radius: 10px; padding: 1px; background: #1F1F1F;">
+<h3 style="padding: 10px; background: #000;">Options</h3>
+<p>Include Classes:
+<label><input type="checkbox" name="type" class="types" value="controller"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/5/58/Controller_icon.png/revision/latest?cb=20181117143552' width='20'/> Controller </label>
+<label><input type="checkbox" name="type" class="types" value="fighter"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/8/8f/Fighter_icon.png/revision/latest?cb=20181117143554' width='20'/> Fighter</label>
+<label><input type="checkbox" name="type" class="types" value="mage"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/2/28/Mage_icon.png/revision/latest?cb=20181117143555' width='20'/> Mage</label>
+<label><input type="checkbox" name="type" class="types" value="marksman"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/7/7f/Marksman_icon.png/revision/latest?cb=20181117143555' width='20'/> Marksman</label>
+</p>
+<label><input type="checkbox" name="type" class="types" value="slayer"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/2/28/Slayer_icon.png/revision/latest?cb=20181117143556' width='20'/> Slayer</label>
+<label><input type="checkbox" name="type" class="types" value="specialist"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/6/67/Specialist_icon.png/revision/latest?cb=20181117143619' width='20'/> Specialist</label>
+<label><input type="checkbox" name="type" class="types" value="tank"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/5/5a/Tank_icon.png/revision/latest?cb=20181117143558' width='20'/> Tank</label>
+</p>
+</p>
+<p>Include Nations:
+<label><input type="checkbox" name="gen" class="gens" value="1"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/f/fc/Ionia_Crest_icon.png/revision/latest?cb=20190720010429' width='20'/> Ionia </label>
+<label><input type="checkbox" name="gen" class="gens" value="2"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/e/e3/Demacia_Crest_icon.png/revision/latest?cb=20190720005456' width='20'/> Demacia</label>
+<label><input type="checkbox" name="gen" class="gens" value="3"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/3/38/Noxus_Crest_icon.png/revision/latest?cb=20161117055828' width='20'/> Noxus</label>
+</p>
+<label><input type="checkbox" name="gen" class="gens" value="4"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/4/4e/Freljord_Crest_icon.png/revision/latest?cb=20190720005359' width='20'/> Freljord</label>
+<label><input type="checkbox" name="gen" class="gens" value="5"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/9/93/Zaun_Crest_icon.png/revision/latest?cb=20161117062823' width='20'/> Zaun</label>
+<label><input type="checkbox" name="gen" class="gens" value="6"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/5/5f/Shurima_Crest_icon.png/revision/latest?cb=20161117023336' width='20'/> Shurima</label>
+</p>
+<label><input type="checkbox" name="gen" class="gens" value="7"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/d/db/Void_Crest_icon.png/revision/latest?cb=20180628142653' width='20'/> Void</label>
+<label><input type="checkbox" name="gen" class="gens" value="8"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/7/72/Shadow_Isles_Crest_icon.png/revision/latest?cb=20190720005424' width='20'/> Shadow Isles</label>
+<label><input type="checkbox" name="gen" class="gens" value="9"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/1/14/Bilgewater_Crest_icon.png/revision/latest?cb=20190720005410' width='20'/> Bilgewater</label>
+</p>
+<label><input type="checkbox" name="gen" class="gens" value="10"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/6/6c/Targon_Crest_icon.png/revision/latest?cb=20161117025040' width='20'/> Targon</label>
+<label><input type="checkbox" name="gen" class="gens" value="11"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/4/42/Piltover_Crest_icon.png/revision/latest?cb=20161117162817' width='20'/> Piltover</label>
+<label><input type="checkbox" name="gen" class="gens" value="12"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/a/a6/Ixtal_Crest_icon.png/revision/latest?cb=20190613145504' width='20'/> Ixtal</label>
+</p>
+<label><input type="checkbox" name="gen" class="gens" value="13"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/5/54/Bandle_City_Crest_icon.png/revision/latest?cb=20190405154416' width='20'/> Bandle City</label>
+<label><input type="checkbox" name="gen" class="gens" value="14"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/8/85/Camavor_Crest_icon.png/revision/latest?cb=20211201162704' width='20'/> Camavor</label>
+<label><input type="checkbox" name="gen" class="gens" value="15"><img src='https://static.wikia.nocookie.net/leagueoflegends/images/9/94/Runeterra_Crest_icon.png/revision/latest?cb=20161117185203' width='20'/> Runeterra</label>
+</p>
+<p><button style="padding: 5px; background: #000; color:#FFF" class="reset">Reset</button></p>
+</div>
+</div>
+</ol>
+
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/sfgrimshaw/genshin_picker@1.0.0/picker.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/sfgrimshaw/genshin_picker@1.0.0/picker-ui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.7.0/Sortable.min.js"></script>
+<script>
+'use strict';
+
+var items = [
+	{id: '001', name: 'Aatrox', image: 'Aatrox.png', type: 'fighter', gen: '15'},
+	{id: '002', name: 'Ahri', image: 'Ahri.png', type: 'mage', gen: '1'},
+	{id: '003', name: 'Akali', image: 'Akali.png', type: 'slayer', gen: '1'},
+	{id: '004', name: 'Akshan', image: 'Akshan.png', type: 'marksman', gen: '6'},
+	{id: '005', name: 'Alistar', image: 'Alistar.png', type: 'tank', gen: '15'},
+	{id: '006', name: 'Amumu', image: 'Amumu.png', type: 'tank', gen: '6'},
+	{id: '007', name: 'Anivia', image: 'Anivia.png', type: 'mage', gen: '4'},
+	{id: '008', name: 'Annie', image: 'Annie.png', type: 'mage', gen: '15'},
+	{id: '009', name: 'Aphelios', image: 'Aphelios.png', type: 'marksman', gen: '10'},
+	{id: '010', name: 'Ashe', image: 'Ashe.png', type: 'marksman', gen: '4'},
+	{id: '011', name: 'Aurelion Sol', image: 'Aurelion Sol.png', type: 'mage', gen: '10'},
+	{id: '012', name: 'Azir', image: 'Azir.png', type: 'specialist', gen: '6'},
+	{id: '013', name: 'Bard', image: 'Bard.png', type: 'controller', gen: '15'},
+	{id: '014', name: 'BelVeth', image: 'BelVeth.png', type: 'slayer', gen: '7'},
+	{id: '015', name: 'Blitzcrank', image: 'Blitzcrank.png', type: 'controller', gen: '5'},
+	{id: '016', name: 'Brand', image: 'Brand.png', type: 'mage', gen: '15'},
+	{id: '017', name: 'Braum', image: 'Braum.png', type: 'tank', gen: '4'},
+	{id: '018', name: 'Briar', image: 'Briar.png', type: 'fighter', gen: '3'},
+	{id: '019', name: 'Caitlyn', image: 'Caitlyn.png', type: 'marksman', gen: '11'},
+	{id: '020', name: 'Camille', image: 'Camille.png', type: 'fighter', gen: '11'},
+	{id: '021', name: 'Cassiopeia', image: 'Cassiopeia.png', type: 'mage', gen: '3'},
+	{id: '022', name: 'ChoGath', image: 'ChoGath.png', type: 'specialist', gen: '7'},
+	{id: '023', name: 'Corki', image: 'Corki.png', type: 'marksman', gen: '13'},
+	{id: '024', name: 'Darius', image: 'Darius.png', type: 'fighter', gen: '3'},
+	{id: '025', name: 'Diana', image: 'Diana.png', type: 'slayer', gen: '10'},
+	{id: '026', name: 'Dr. Mundo', image: 'Dr. Mundo.png', type: 'fighter', gen: '5'},
+	{id: '027', name: 'Draven', image: 'Draven.png', type: 'marksman', gen: '3'},
+	{id: '028', name: 'Ekko', image: 'Ekko.png', type: 'slayer', gen: '5'},
+	{id: '029', name: 'Elise', image: 'Elise.png', type: 'fighter', gen: '8'},
+	{id: '030', name: 'Evelynn', image: 'Evelynn.png', type: 'slayer', gen: '15'},
+	{id: '031', name: 'Ezreal', image: 'Ezreal.png', type: 'marksman', gen: '11'},
+	{id: '032', name: 'Fiddlesticks', image: 'Fiddlesticks.png', type: 'specialist', gen: '15'},
+	{id: '033', name: 'Fiora', image: 'Fiora.png', type: 'slayer', gen: '2'},
+	{id: '034', name: 'Fizz', image: 'Fizz.png', type: 'slayer', gen: '9'},
+	{id: '035', name: 'Galio', image: 'Galio.png', type: 'tank', gen: '2'},
+	{id: '036', name: 'Gangplank', image: 'Gangplank.png', type: 'specialist', gen: '9'},
+	{id: '037', name: 'Garen', image: 'Garen.png', type: 'fighter', gen: '2'},
+	{id: '038', name: 'Gnar', image: 'Gnar.png', type: 'specialist', gen: '4'},
+	{id: '039', name: 'Gragas', image: 'Gragas.png', type: 'tank', gen: '4'},
+	{id: '040', name: 'Graves', image: 'Graves.png', type: 'specialist', gen: '9'},
+	{id: '041', name: 'Gwen', image: 'Gwen.png', type: 'slayer', gen: '8'},
+	{id: '042', name: 'Hecarim', image: 'Hecarim.png', type: 'fighter', gen: '8'},
+	{id: '043', name: 'Heimerdinger', image: 'Heimerdinger.png', type: 'specialist', gen: '11'},
+	{id: '044', name: 'Hwei', image: 'Hwei.png', type: 'mage', gen: '1'},
+	{id: '045', name: 'Illaoi', image: 'Illaoi.png', type: 'fighter', gen: '9'},
+	{id: '046', name: 'Irelia', image: 'Irelia.png', type: 'fighter', gen: '1'},
+	{id: '047', name: 'Ivern', image: 'Ivern.png', type: 'controller', gen: '1'},
+	{id: '048', name: 'Janna', image: 'Janna.png', type: 'controller', gen: '5'},
+	{id: '049', name: 'Jarvan IV', image: 'Jarvan IV.png', type: 'fighter', gen: '2'},
+	{id: '050', name: 'Jax', image: 'Jax.png', type: 'slayer', gen: '15'},
+	{id: '051', name: 'Jayce', image: 'Jayce.png', type: 'mage', gen: '11'},
+	{id: '052', name: 'Jhin', image: 'Jhin.png', type: 'marksman', gen: '1'},
+	{id: '053', name: 'Jinx', image: 'Jinx.png', type: 'marksman', gen: '5'},
+	{id: '054', name: 'KaiSa', image: 'KaiSa.png', type: 'marksman', gen: '7'},
+	{id: '055', name: 'Kalista', image: 'Kalista.png', type: 'marksman', gen: '8'},
+	{id: '056', name: 'Karma', image: 'Karma.png', type: 'mage', gen: '1'},
+	{id: '057', name: 'Karthus', image: 'Karthus.png', type: 'mage', gen: '8'},
+	{id: '058', name: 'Kassadin', image: 'Kassadin.png', type: 'slayer', gen: '7'},
+	{id: '059', name: 'Katarina', image: 'Katarina.png', type: 'slayer', gen: '3'},
+	{id: '060', name: 'Kayle', image: 'Kayle.png', type: 'specialist', gen: '2'},
+	{id: '061', name: 'Kayn', image: 'Kayn.png', type: 'slayer', gen: '1'},
+	{id: '062', name: 'Kennen', image: 'Kennen.png', type: 'specialist', gen: '1'},
+	{id: '063', name: 'KhaZix', image: 'KhaZix.png', type: 'slayer', gen: '7'},
+	{id: '064', name: 'Kindred', image: 'Kindred.png', type: 'marksman', gen: '15'},
+	{id: '065', name: 'Kled', image: 'Kled.png', type: 'slayer', gen: '3'},
+	{id: '066', name: 'KogMaw', image: 'KogMaw.png', type: 'marksman', gen: '7'},
+	{id: '067', name: 'KSante', image: 'KSante.png', type: 'tank', gen: '6'},
+	{id: '068', name: 'LeBlanc', image: 'LeBlanc.png', type: 'mage', gen: '3'},
+	{id: '069', name: 'Lee Sin', image: 'Lee Sin.png', type: 'fighter', gen: '1'},
+	{id: '070', name: 'Leona', image: 'Leona.png', type: 'tank', gen: '10'},
+	{id: '071', name: 'Lillia', image: 'Lillia.png', type: 'slayer', gen: '1'},
+	{id: '072', name: 'Lissandra', image: 'Lissandra.png', type: 'mage', gen: '4'},
+	{id: '073', name: 'Lucian', image: 'Lucian.png', type: 'marksman', gen: '2'},
+	{id: '074', name: 'Lulu', image: 'Lulu.png', type: 'controller', gen: '13'},
+	{id: '075', name: 'Lux', image: 'Lux.png', type: 'mage', gen: '2'},
+	{id: '076', name: 'Malphite', image: 'Malphite.png', type: 'tank', gen: '12'},
+	{id: '077', name: 'Malzahar', image: 'Malzahar.png', type: 'mage', gen: '7'},
+	{id: '078', name: 'Maokai', image: 'Maokai.png', type: 'tank', gen: '8'},
+	{id: '079', name: 'Master Yi', image: 'Master Yi.png', type: 'slayer', gen: '1'},
+	{id: '080', name: 'Milio', image: 'Milio.png', type: 'controller', gen: '12'},
+	{id: '081', name: 'Miss Fortune', image: 'Miss Fortune.png', type: 'marksman', gen: '9'},
+	{id: '082', name: 'Mordekaiser', image: 'Mordekaiser.png', type: 'fighter', gen: '3'},
+	{id: '083', name: 'Morgana', image: 'Morgana.png', type: 'controller', gen: '2'},
+	{id: '084', name: 'Naafiri', image: 'Naafiri.png', type: 'slayer', gen: '6'},
+	{id: '085', name: 'Nami', image: 'Nami.png', type: 'controller', gen: '15'},
+	{id: '086', name: 'Nasus', image: 'Nasus.png', type: 'fighter', gen: '6'},
+	{id: '087', name: 'Nautilus', image: 'Nautilus.png', type: 'tank', gen: '9'},
+	{id: '088', name: 'Neeko', image: 'Neeko.png', type: 'mage', gen: '12'},
+	{id: '089', name: 'Nidalee', image: 'Nidalee.png', type: 'specialist', gen: '12'},
+	{id: '090', name: 'Nilah', image: 'Nilah.png', type: 'slayer', gen: '15'},
+	{id: '091', name: 'Nocturne', image: 'Nocturne.png', type: 'slayer', gen: '15'},
+	{id: '092', name: 'Nunu & Willump', image: 'Nunu & Willump.png', type: 'tank', gen: '4'},
+	{id: '093', name: 'Olaf', image: 'Olaf.png', type: 'fighter', gen: '4'},
+	{id: '094', name: 'Orianna', image: 'Orianna.png', type: 'mage', gen: '11'},
+	{id: '095', name: 'Ornn', image: 'Ornn.png', type: 'tank', gen: '4'},
+	{id: '096', name: 'Pantheon', image: 'Pantheon.png', type: 'fighter', gen: '10'},
+	{id: '097', name: 'Poppy', image: 'Poppy.png', type: 'tank', gen: '2'},
+	{id: '098', name: 'Pyke', image: 'Pyke.png', type: 'slayer', gen: '9'},
+	{id: '099', name: 'Qiyana', image: 'Qiyana.png', type: 'slayer', gen: '12'},
+	{id: '100', name: 'Quinn', image: 'Quinn.png', type: 'specialist', gen: '2'},
+	{id: '101', name: 'Rakan', image: 'Rakan.png', type: 'controller', gen: '1'},
+	{id: '102', name: 'Rammus', image: 'Rammus.png', type: 'tank', gen: '6'},
+	{id: '103', name: 'RekSai', image: 'RekSai.png', type: 'fighter', gen: '7'},
+	{id: '104', name: 'Rell', image: 'Rell.png', type: 'tank', gen: '3'},
+	{id: '105', name: 'Renata Glasc', image: 'Renata Glasc.png', type: 'controller', gen: '5'},
+	{id: '106', name: 'Renekton', image: 'Renekton.png', type: 'fighter', gen: '6'},
+	{id: '107', name: 'Rengar', image: 'Rengar.png', type: 'slayer', gen: '12'},
+	{id: '108', name: 'Riven', image: 'Riven.png', type: 'slayer', gen: '3'},
+	{id: '109', name: 'Rumble', image: 'Rumble.png', type: 'mage', gen: '13'},
+	{id: '110', name: 'Ryze', image: 'Ryze.png', type: 'mage', gen: '15'},
+	{id: '111', name: 'Samira', image: 'Samira.png', type: 'marksman', gen: '3'},
+	{id: '112', name: 'Sejuani', image: 'Sejuani.png', type: 'tank', gen: '4'},
+	{id: '113', name: 'Senna', image: 'Senna.png', type: 'marksman', gen: '2'},
+	{id: '114', name: 'Seraphine', image: 'Seraphine.png', type: 'mage', gen: '11'},
+	{id: '115', name: 'Sett', image: 'Sett.png', type: 'fighter', gen: '1'},
+	{id: '116', name: 'Shaco', image: 'Shaco.png', type: 'slayer', gen: '15'},
+	{id: '117', name: 'Shen', image: 'Shen.png', type: 'tank', gen: '1'},
+	{id: '118', name: 'Shyvana', image: 'Shyvana.png', type: 'fighter', gen: '2'},
+	{id: '119', name: 'Singed', image: 'Singed.png', type: 'specialist', gen: '5'},
+	{id: '120', name: 'Sion', image: 'Sion.png', type: 'tank', gen: '3'},
+	{id: '121', name: 'Sivir', image: 'Sivir.png', type: 'marksman', gen: '6'},
+	{id: '122', name: 'Skarner', image: 'Skarner.png', type: 'fighter', gen: '12'},
+	{id: '123', name: 'Smolder', image: 'Smolder.png', type: 'marksman', gen: '14'},
+	{id: '124', name: 'Sona', image: 'Sona.png', type: 'controller', gen: '2'},
+	{id: '125', name: 'Soraka', image: 'Soraka.png', type: 'controller', gen: '10'},
+	{id: '126', name: 'Swain', image: 'Swain.png', type: 'mage', gen: '3'},
+	{id: '127', name: 'Sylas', image: 'Sylas.png', type: 'mage', gen: '2'},
+	{id: '128', name: 'Syndra', image: 'Syndra.png', type: 'mage', gen: '1'},
+	{id: '129', name: 'Tahm Kench', image: 'Tahm Kench.png', type: 'tank', gen: '9'},
+	{id: '130', name: 'Taliyah', image: 'Taliyah.png', type: 'mage', gen: '6'},
+	{id: '131', name: 'Talon', image: 'Talon.png', type: 'slayer', gen: '3'},
+	{id: '132', name: 'Taric', image: 'Taric.png', type: 'controller', gen: '10'},
+	{id: '133', name: 'Teemo', image: 'Teemo.png', type: 'specialist', gen: '13'},
+	{id: '134', name: 'Thresh', image: 'Thresh.png', type: 'controller', gen: '8'},
+	{id: '135', name: 'Tristana', image: 'Tristana.png', type: 'marksman', gen: '13'},
+	{id: '136', name: 'Trundle', image: 'Trundle.png', type: 'fighter', gen: '4'},
+	{id: '137', name: 'Tryndamere', image: 'Tryndamere.png', type: 'slayer', gen: '4'},
+	{id: '138', name: 'Twisted Fate', image: 'Twisted Fate.png', type: 'mage', gen: '9'},
+	{id: '139', name: 'Twitch', image: 'Twitch.png', type: 'marksman', gen: '5'},
+	{id: '140', name: 'Udyr', image: 'Udyr.png', type: 'fighter', gen: '4'},
+	{id: '141', name: 'Urgot', image: 'Urgot.png', type: 'fighter', gen: '5'},
+	{id: '142', name: 'Varus', image: 'Varus.png', type: 'marksman', gen: '1'},
+	{id: '143', name: 'Vayne', image: 'Vayne.png', type: 'marksman', gen: '2'},
+	{id: '144', name: 'Veigar', image: 'Veigar.png', type: 'mage', gen: '15'},
+	{id: '145', name: 'VelKoz', image: 'VelKoz.png', type: 'mage', gen: '7'},
+	{id: '146', name: 'Vex', image: 'Vex.png', type: 'mage', gen: '8'},
+	{id: '147', name: 'Vi', image: 'Vi.png', type: 'fighter', gen: '11'},
+	{id: '148', name: 'Viego', image: 'Viego.png', type: 'slayer', gen: '14'},
+	{id: '149', name: 'Viktor', image: 'Viktor.png', type: 'mage', gen: '5'},
+	{id: '150', name: 'Vladimir', image: 'Vladimir.png', type: 'mage', gen: '3'},
+	{id: '151', name: 'Volibear', image: 'Volibear.png', type: 'fighter', gen: '4'},
+	{id: '152', name: 'Warwick', image: 'Warwick.png', type: 'fighter', gen: '5'},
+	{id: '153', name: 'Wukong', image: 'Wukong.png', type: 'fighter', gen: '1'},
+	{id: '154', name: 'Xayah', image: 'Xayah.png', type: 'marksman', gen: '1'},
+	{id: '155', name: 'Xerath', image: 'Xerath.png', type: 'mage', gen: '6'},
+	{id: '156', name: 'Xin Zhao', image: 'Xin Zhao.png', type: 'fighter', gen: '2'},
+	{id: '157', name: 'Yasuo', image: 'Yasuo.png', type: 'slayer', gen: '1'},
+	{id: '158', name: 'Yone', image: 'Yone.png', type: 'slayer', gen: '1'},
+	{id: '159', name: 'Yorick', image: 'Yorick.png', type: 'fighter', gen: '8'},
+	{id: '160', name: 'Yuumi', image: 'Yuumi.png', type: 'controller', gen: '13'},
+	{id: '161', name: 'Zac', image: 'Zac.png', type: 'tank', gen: '5'},
+	{id: '162', name: 'Zed', image: 'Zed.png', type: 'slayer', gen: '1'},
+	{id: '163', name: 'Zeri', image: 'Zeri.png', type: 'marksman', gen: '5'},
+	{id: '164', name: 'Ziggs', image: 'Ziggs.png', type: 'mage', gen: '5'},
+	{id: '165', name: 'Zilean', image: 'Zilean.png', type: 'specialist', gen: '15'},
+	{id: '166', name: 'Zoe', image: 'Zoe.png', type: 'mage', gen: '10'},
+	{id: '167', name: 'Zyra', image: 'Zyra.png', type: 'controller', gen: '12'}
+      ]
+
+var myPicker = new picker.Picker({
+    items: items,
+    localStorageKey: 'picker-state',
+    defaultSettings: {
+        types: ["controller", "fighter", "mage", "marksman", "slayer", "specialist", "tank"],
+        gens: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"],
+	minBatchSize: 2,
+	maxBatchSize: 12
+    },
+    shouldIncludeItem: function(item, settings) {
+        return (settings.gens.indexOf(item.gen) !== -1) && (settings.types.indexOf(item.type) !== -1);
+    }
+});
+
+var pickerUI = new PickerUI(myPicker, {
+    elements: {
+        pick: "#pick",
+        pass: "#pass",
+        undo: "#undo",
+        redo: "#redo",
+        reset: ".reset",
+        evaluating: "#evaluating",
+        favorites: "#favorites",
+        settings: {
+            types: '.types',
+            gens: '.gens'
+        }
+    }
+});
+
+pickerUI.initialize();
+
+/* Sortable favorites - you can safely remove this, and the Sortable.min.js script, if you don't want to be able to sort your favorite list. */
+var sortable = new Sortable(pickerUI.elem.favorites.get(0), {
+    draggable: '.item',
+    animation: 100,
+    onStart: function() {
+        pickerUI.elem.favorites.addClass("sorting");
+    },
+    onEnd: function() {
+        pickerUI.elem.favorites.removeClass("sorting");
+    },
+    onUpdate: function() {
+        myPicker.setFavorites(pickerUI.elem.favorites.children().map(function() {
+            return pickerUI.getItem(this);
+        }).get());
+        pickerUI.update(true);
+    }
+});
+/* End sortable favorites */
+
+/* PROGRESS BAR */
+
+function updateProgressBar(value, updateType) {
+    var $progressBar = $("#progress-bar span");
+    var $favorite;
+
+    if (['pick', 'undo', 'redo'].indexOf(updateType) !== -1) {
+        if (!value && updateType !== 'undo') {
+            // We just found a favorite!
+            $favorite = pickerUI.elem.favorites.children('li').last().addClass("no-animate hidden");
+            $progressBar.animate({ width: '100%' }, 400, function() {
+                $progressBar.parent().css({ transform: 'scale(1.1)'});
+                setTimeout(function() {
+                    $progressBar.parent().css({ transform: 'scale(1)'});
+                    $progressBar.width(0);
+                    $favorite.removeClass("no-animate hidden");
+                }, 200);
+            });
+        } else {
+            if (!$progressBar.width() && updateType === 'undo') {
+                $progressBar.width("100%")
+            }
+            $progressBar.animate({ width: value + '%' }, 400);
+        }
+    } else {
+        $progressBar.width(value + '%');
+    }
+}
+
+
+</script>
+</body>
+</html>
